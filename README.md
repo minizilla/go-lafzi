@@ -1,2 +1,3 @@
 # go-lafzi
-Lafzi implementation of https://github.com/lafzi/lafzi-web in Go
+
+[Go](https://golang.org/) implementation of [lafzi](https://github.com/lafzi/lafzi-web).
