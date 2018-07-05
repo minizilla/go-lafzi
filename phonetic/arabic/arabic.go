@@ -8,7 +8,7 @@ import (
 	"unicode/utf8"
 )
 
-// Constant characters.
+// Consonant characters.
 const (
 	Hamzah        = '\u0621'
 	AlifMad       = '\u0622'
