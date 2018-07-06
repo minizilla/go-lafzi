@@ -1,2 +1,5 @@
 # ignore index
 index/
+
+#ignore target
+target/
