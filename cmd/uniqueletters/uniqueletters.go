@@ -11,12 +11,12 @@ import (
 
 func main() {
 	fmt.Println("Start scanning...")
-	f, err := os.Open("quran-simple.txt")
+	f, err := os.Open("data/quran_teks.txt")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	fTarget, err := os.OpenFile("uniqueletters.txt", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+	fTarget, err := os.Create("target/uniqueletters.txt")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -33,6 +33,7 @@ func main() {
 	// scan until verse 6236 which is the last verse of quran
 	for scanner.Scan() && i < 6236 {
 		b := bytes.Replace(scanner.Bytes(), []byte(" "), []byte(""), -1)
+		b = bytes.Split(b, []byte("|"))[3]
 		reader := bytes.NewReader(b)
 		for {
 			r, _, err := reader.ReadRune()
