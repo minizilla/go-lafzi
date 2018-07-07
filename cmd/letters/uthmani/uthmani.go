@@ -7,16 +7,17 @@ import (
 	"log"
 	"os"
 	"sort"
+	"time"
 )
 
 func main() {
 	fmt.Println("Start scanning...")
-	f, err := os.Open("data/quran_teks.txt")
+	f, err := os.Open("data/quran/uthmani.txt")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	fTarget, err := os.Create("target/uniqueletters.txt")
+	fTarget, err := os.Create("data/letters/uthmani.txt")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -26,12 +27,12 @@ func main() {
 		fTarget.Close()
 	}()
 
+	timeStart := time.Now()
 	letters := make(map[rune]bool)
 	scanner := bufio.NewScanner(f)
-	i := 0
-	// file quran-simple.txt contain copyright at the end,
-	// scan until verse 6236 which is the last verse of quran
-	for scanner.Scan() && i < 6236 {
+	var verse int
+
+	for scanner.Scan() {
 		b := bytes.Replace(scanner.Bytes(), []byte(" "), []byte(""), -1)
 		b = bytes.Split(b, []byte("|"))[3]
 		reader := bytes.NewReader(b)
@@ -42,7 +43,7 @@ func main() {
 			}
 			letters[r] = true
 		}
-		i++
+		verse++
 	}
 
 	// make it in order
@@ -57,13 +58,18 @@ func main() {
 	writer := bufio.NewWriter(fTarget)
 	for _, l := range sortedLetters {
 		fmt.Fprintf(writer, "%+q : %c\n", l, l)
-		fmt.Fprintf(os.Stdout, "%+q : %c\n", l, l)
 	}
 	err = writer.Flush()
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("%d verse scanned, %d unique character\n", i, len(sortedLetters))
+
+	timeEnd := time.Now()
+	timeElapsed := timeEnd.Sub(timeStart)
+
+	fmt.Printf("%d verse scanned, %d unique character\n", verse, len(sortedLetters))
+	fmt.Printf("Processed in %f second\n", timeElapsed.Seconds())
+	fmt.Printf("Save file in %s\n", fTarget.Name())
 }
 
 type keys []rune
