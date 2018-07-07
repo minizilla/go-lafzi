@@ -1,5 +1,5 @@
 # ignore index
 index/
 
-#ignore target
-target/
+# ignore data/letters
+data/letters
