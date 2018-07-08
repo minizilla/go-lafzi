@@ -4,109 +4,85 @@ package trigram
 
 import (
 	"bytes"
+	"fmt"
 	"unicode/utf8"
 )
 
-// Trigram ...
-type Trigram string
+// Token is a smaller component of trigram which contain
+// exact three runes.
+type Token string
 
-// MetaData contain Frequency and Position of Trigram.
-type MetaData struct {
-	Frequency, Position int
+// Trigram is a contiguous sequence of three items
+// from a given sample of text.
+type Trigram []Token
+
+// Count counts number of token from b.
+func Count(b []byte) int {
+	return utf8.RuneCount(b) - 2
 }
 
-// PosFrequency ...
-func PosFrequency(b []byte) map[Trigram]MetaData {
-	trigrams := Extracts(b)
-	trigramsFrequency := frequencyCount(trigrams)
-	res := make(map[Trigram]MetaData)
-	for trigram, frequency := range trigramsFrequency {
-		pos := bytes.Index(b, []byte(trigram)) + 1
-		res[trigram] = MetaData{frequency, pos}
+type empty struct{}
+
+// Extract extracts b into trigram with unique token. This process also
+// often called as tokenization. The tokenization only truncate
+// b with overlapping window.
+func Extract(b []byte) Trigram {
+	tokenCount := Count(b)
+
+	if tokenCount < 1 {
+		return Trigram{}
+	}
+
+	if tokenCount == 1 {
+		return Trigram{Token(b)}
+	}
+
+	encountered := make(map[Token]empty)
+	trigram := make(Trigram, tokenCount)
+	seq := bytes.Runes(b)
+
+	for i := 0; i < tokenCount; i++ {
+		token := Token(fmt.Sprintf("%c%c%c", seq[i], seq[i+1], seq[i+2]))
+		if _, ok := encountered[token]; !ok {
+			encountered[token] = empty{}
+			trigram[i] = token
+		}
+	}
+
+	return trigram
+}
+
+// TokenPositions search all positions of tokens appearing in trigram.
+// It returns map with token as key and all the position as value.
+func TokenPositions(b []byte) map[Token][]int {
+	trigram := Extract(b)
+	res := make(map[Token][]int)
+
+	for _, token := range trigram {
+		res[token] = indexAll(b, []byte(token))
 	}
 
 	return res
 }
 
-func frequencyCount(trigrams []Trigram) map[Trigram]int {
-	trigramsFrequency := make(map[Trigram]int)
-	for _, trigram := range trigrams {
-		trigramsFrequency[Trigram(trigram)]++
+// indexAll like bytes.Index but search all index not just first instance of sep.
+// It used internally and guaranted indexAll always return non empty slice / nil slice.
+// Index start with 1 not 0 and search function truncate with overlapping window
+// just like tokenization.
+// The Index is not index of s in byte but index of s utf8 encoded.
+func indexAll(s, sep []byte) []int {
+	n, i := 0, 0
+	pos := make([]int, 0)
+
+	for i != -1 {
+		i = bytes.Index(s, sep)
+		if i != -1 {
+			n += utf8.RuneCount(s[:i]) + 1
+			pos = append(pos, n)
+			_, size := utf8.DecodeRune(s[i:])
+			s = s[i+size:]
+		}
 	}
 
-	return trigramsFrequency
-}
-
-// Count counts trigram from b.
-func Count(b []byte) int {
-	return utf8.RuneCount(b) - 2
-}
-
-// Extracts return a slice of Trigram from extracting b.
-// Input b must be valid UTF-8 otherwise returns empty slice of Trigram.
-func Extracts(b []byte) []Trigram {
-	b = bytes.TrimSpace(b)
-	trigramCount := Count(b)
-
-	if trigramCount < 1 {
-		return []Trigram{}
-	}
-
-	if trigramCount == 1 {
-		return []Trigram{Trigram(b)}
-	}
-
-	trigrams := make([]Trigram, Count(b))
-	var advanced int
-	for i := 0; i < trigramCount; i++ {
-		trigram, n := Extract(b[advanced:])
-		trigrams[i] = trigram
-		advanced += n
-	}
-
-	return trigrams
-}
-
-// Extract returns Trigram and the number of bytes
-// required to advanced next trigram from b. Input b must be
-// valid UTF-8 otherwise returns empty Trigram and 0.
-func Extract(b []byte) (Trigram, int) {
-	rCount := utf8.RuneCount(b)
-	if rCount < 3 {
-		return Trigram(""), 0
-	}
-
-	// len trigram atleast len(b)
-	trigram := make([]byte, len(b))
-	buf := b[:]
-	size := 0
-
-	// first rune in trigram
-	r, n := utf8.DecodeRune(buf)
-	if r == utf8.RuneError {
-		return Trigram(""), 0
-	}
-	buf = buf[n:]
-	size += n
-	advanced := n // number of bytes of first rune in trigram
-
-	// second rune in trigram
-	r, n = utf8.DecodeRune(buf)
-	if r == utf8.RuneError {
-		return Trigram(""), 0
-	}
-	buf = buf[n:]
-	size += n
-
-	// third rune in trigram
-	r, n = utf8.DecodeRune(buf)
-	if r == utf8.RuneError {
-		return Trigram(""), 0
-	}
-	buf = buf[n:]
-	size += n
-
-	copy(trigram, b[:size])
-
-	return Trigram(trigram), advanced
+	return pos
 }
