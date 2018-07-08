@@ -1,5 +1,8 @@
 # ignore index
-index/
+data/index/*
 
 # ignore data/letters
-data/letters
+data/letters/*
+
+# negate all README.md
+!README.md
