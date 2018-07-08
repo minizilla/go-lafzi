@@ -52,6 +52,21 @@ func Extract(b []byte) Trigram {
 	return trigram
 }
 
+// TokenPosition search first instance of tokens in trigram.
+// It returns map with token as key and the first position as value.
+func TokenPosition(b []byte) map[Token]int {
+	trigram := Extract(b)
+	res := make(map[Token]int)
+
+	for _, token := range trigram {
+		i := bytes.Index(b, []byte(token))
+		i = utf8.RuneCount(b[:i]) + 1
+		res[token] = i
+	}
+
+	return res
+}
+
 // TokenPositions search all positions of tokens appearing in trigram.
 // It returns map with token as key and all the position as value.
 func TokenPositions(b []byte) map[Token][]int {
