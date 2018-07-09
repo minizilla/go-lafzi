@@ -46,3 +46,19 @@ func LIS(s []int) []int {
 func isSet(arr [][]int, i int) bool {
 	return len(arr) > i
 }
+
+// ReciprocalDiffAvg counts average reciprocal from interval of adjacent elements.
+func ReciprocalDiffAvg(s []int) float64 {
+	l := len(s)
+	var sum float64
+
+	if l == 1 {
+		return 1
+	}
+
+	for i := 0; i < l-1; i++ {
+		sum += (1 / float64(s[i+1]-s[i]))
+	}
+
+	return sum / float64(l-1)
+}
