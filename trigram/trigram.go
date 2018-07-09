@@ -16,7 +16,7 @@ type Token string
 // from a given sample of text.
 type Trigram []Token
 
-// Count counts number of token from b.
+// Count counts number of non-unique token from b.
 func Count(b []byte) int {
 	return utf8.RuneCount(b) - 2
 }
@@ -50,21 +50,6 @@ func Extract(b []byte) Trigram {
 	}
 
 	return trigram
-}
-
-// TokenPosition search first instance of tokens in trigram.
-// It returns map with token as key and the first position as value.
-func TokenPosition(b []byte) map[Token]int {
-	trigram := Extract(b)
-	res := make(map[Token]int)
-
-	for _, token := range trigram {
-		i := bytes.Index(b, []byte(token))
-		i = utf8.RuneCount(b[:i]) + 1
-		res[token] = i
-	}
-
-	return res
 }
 
 // TokenPositions search all positions of tokens appearing in trigram.
