@@ -50,7 +50,6 @@ var (
 	Zah         = '\u0638' // http://www.fileformat.info/info/unicode/char/0638/index.htm
 	Ain         = '\u0639' // http://www.fileformat.info/info/unicode/char/0639/index.htm
 	Ghain       = '\u063a' // http://www.fileformat.info/info/unicode/char/063a/index.htm
-	Tatweel     = '\u0640' // http://www.fileformat.info/info/unicode/char/0640/index.htm
 	Feh         = '\u0641' // http://www.fileformat.info/info/unicode/char/0641/index.htm
 	Qaf         = '\u0642' // http://www.fileformat.info/info/unicode/char/0642/index.htm
 	Kaf         = '\u0643' // http://www.fileformat.info/info/unicode/char/0643/index.htm
@@ -78,6 +77,7 @@ var (
 // Uthmani characters. Prefix: S = small, H = high, L = low, U = upright,
 // E = empty, C = centre, R = Rounded, F = filled
 var (
+	Tatweel        = '\u0640' // http://www.fileformat.info/info/unicode/char/0640/index.htm
 	MaddahA        = '\u0653' // http://www.fileformat.info/info/unicode/char/0653/index.htm
 	HamzaA         = '\u0654' // http://www.fileformat.info/info/unicode/char/0654/index.htm
 	AlefA          = '\u0670' // http://www.fileformat.info/info/unicode/char/0670/index.htm
@@ -178,7 +178,8 @@ func normalizedUthmani(b []byte) []byte {
 			r == SHURectZero || r == SWaw ||
 			r == SHMeemIsolated || r == SLSeen ||
 			r == Sajdah || r == ECHStop ||
-			r == RHFCStop || r == SLMeem {
+			r == RHFCStop || r == SLMeem ||
+			r == Tatweel {
 			return -1
 		}
 		return r
@@ -238,13 +239,14 @@ func removeShadda(b []byte) []byte {
 func joinConsonant(b []byte) []byte {
 	buf := make([]byte, len(b))
 	runes := bytes.Runes(b)
+	l := len(runes)
 	n := 0
-	for i := 0; i < len(runes); i++ {
+	for i := 0; i < l; i++ {
 		curr := runes[i]
 		var next1 rune
 		var next2 rune
 		// last 2 itteration doesn't need next1 and next2
-		if i >= len(runes)-2 {
+		if i >= l-2 {
 			next1 = utf8.RuneError
 			next2 = utf8.RuneError
 		} else {
@@ -255,6 +257,9 @@ func joinConsonant(b []byte) []byte {
 		if next1 == Sukun && curr == next2 {
 			n += utf8.EncodeRune(buf[n:], curr)
 			i += 2
+		} else if curr == next1 {
+			n += utf8.EncodeRune(buf[n:], curr)
+			i++
 		} else {
 			n += utf8.EncodeRune(buf[n:], curr)
 		}
@@ -265,7 +270,6 @@ func joinConsonant(b []byte) []byte {
 
 func fixBoundary(b []byte) []byte {
 	runes := bytes.Runes(b)
-
 	l := len(runes)
 	r := runes[l-1]
 	if r == Alef || r == AlefMaksura {
@@ -340,13 +344,14 @@ func isVowel(r rune) bool {
 func removeMadda(b []byte) []byte {
 	buf := make([]byte, len(b))
 	runes := bytes.Runes(b)
+	l := len(runes)
 	n := 0
-	for i := 0; i < len(runes); i++ {
+	for i := 0; i < l; i++ {
 		curr := runes[i]
 		var next1 rune
 		var next2 rune
 		// last 2 itteration doesn't need next1 and next2
-		if i >= len(runes)-2 {
+		if i >= l-2 {
 			next1 = utf8.RuneError
 			next2 = utf8.RuneError
 		} else {
@@ -354,9 +359,10 @@ func removeMadda(b []byte) []byte {
 			next2 = runes[i+2]
 		}
 
-		if (curr == Fatha && next1 == Alef && !isHarakat(next2)) ||
-			(curr == Kasra && next1 == Yeh && !isHarakat(next2)) ||
-			(curr == Damma && next1 == Waw && !isHarakat(next2)) {
+		if next2 != utf8.RuneError &&
+			((curr == Fatha && (next1 == Alef || next1 == AlefMaksura) && !isHarakat(next2)) ||
+				(curr == Kasra && next1 == Yeh && !isHarakat(next2)) ||
+				(curr == Damma && next1 == Waw && !isHarakat(next2))) {
 			n += utf8.EncodeRune(buf[n:], curr)
 			n += utf8.EncodeRune(buf[n:], next2)
 			i += 2
@@ -374,43 +380,32 @@ func removeMadda(b []byte) []byte {
 }
 
 func removeUnreadConsonant(b []byte) []byte {
+	b = rmvUnreadCons(b)
+	// double check to anticipate if unread consonant is double
+	b = rmvUnreadCons(b)
+
+	return b
+}
+
+func rmvUnreadCons(b []byte) []byte {
 	buf := make([]byte, len(b))
 	runes := bytes.Runes(b)
+	l := len(runes)
 	n := 0
-	for i := 0; i < len(runes); i++ {
+	for i := 0; i < l; i++ {
 		curr := runes[i]
 		var next rune
 		// last itteration doesn't need next
-		if i >= len(runes)-1 {
+		if i >= l-1 {
 			next = utf8.RuneError
 		} else {
 			next = runes[i+1]
 		}
 
-		if isVowel(curr) && isVowel(next) {
-			// if current and next one is vowel then remove the current one
-			n += utf8.EncodeRune(buf[n:], next)
-			i++
-		} else {
-			n += utf8.EncodeRune(buf[n:], curr)
-		}
-	}
-
-	// double check to anticipate if unread consonant is double
-	runes = bytes.Runes(buf[:n])
-	n = 0
-	for i := 0; i < len(runes); i++ {
-		curr := runes[i]
-		var next rune
-		// last itteration doesn't need next
-		if i >= len(runes)-1 {
-			next = utf8.RuneError
-		} else {
-			next = runes[i+1]
-		}
-
-		if isVowel(curr) && isVowel(next) {
-			// if current and next one is vowel then remove the current one
+		if next != utf8.RuneError && !isVowel(curr) && !isVowel(next) &&
+			curr != Noon && curr != Meem {
+			// if current and next one is non-vowel then remove the current one
+			// except noon and meem (uthmani)
 			n += utf8.EncodeRune(buf[n:], next)
 			i++
 		} else {
@@ -424,7 +419,11 @@ func removeUnreadConsonant(b []byte) []byte {
 func iqlabSub(b []byte) []byte {
 	old := []byte(string([]rune{Noon, Sukun, Beh}))
 	new := []byte(string([]rune{Meem, Sukun, Beh}))
-	bytes.Replace(b, old, new, -1)
+	b = bytes.Replace(b, old, new, -1)
+
+	old = []byte(string([]rune{Noon, Beh}))
+	new = []byte(string([]rune{Meem, Sukun, Beh}))
+	b = bytes.Replace(b, old, new, -1)
 
 	return b
 }
@@ -446,6 +445,23 @@ func idghamSub(b []byte) []byte {
 	new = []byte(string(Reh))
 	b = bytes.Replace(b, old, new, -1)
 
+	// uthmani
+	old = []byte(string([]rune{Noon, Noon}))
+	new = []byte(string(Noon))
+	b = bytes.Replace(b, old, new, -1)
+
+	old = []byte(string([]rune{Noon, Meem}))
+	new = []byte(string(Meem))
+	b = bytes.Replace(b, old, new, -1)
+
+	old = []byte(string([]rune{Noon, Lam}))
+	new = []byte(string(Lam))
+	b = bytes.Replace(b, old, new, -1)
+
+	old = []byte(string([]rune{Noon, Reh}))
+	new = []byte(string(Reh))
+	b = bytes.Replace(b, old, new, -1)
+
 	b = exceptionIdgham(b)
 
 	return b
@@ -453,7 +469,7 @@ func idghamSub(b []byte) []byte {
 
 func exceptionIdgham(b []byte) []byte {
 	// exception
-	old := []byte(string([]rune{Thal, Damma, Noon, Sukun, Yeh}))
+	old := []byte(string([]rune{Dal, Damma, Noon, Sukun, Yeh}))
 	new := []byte("DUNYA")
 	b = bytes.Replace(b, old, new, -1)
 
@@ -470,8 +486,8 @@ func exceptionIdgham(b []byte) []byte {
 	b = bytes.Replace(b, old, new, -1)
 
 	old = []byte(string([]rune{Noon, Damma, Noon, Sukun, Waw, Fatha, Lam,
-		Sukun, Qaf, Fatha, Lam, Fatha, Meem, Kasra}))
-	new = []byte("NUNWALQALAMI")
+		Sukun, Qaf, Fatha, Lam, Fatha, Meem}))
+	new = []byte("NUNWALQALAM")
 	b = bytes.Replace(b, old, new, -1)
 
 	// substitute idgham
@@ -494,7 +510,7 @@ func exceptionIdgham(b []byte) []byte {
 
 	// returned it again
 	old = []byte("DUNYA")
-	new = []byte(string([]rune{Thal, Damma, Noon, Sukun, Yeh}))
+	new = []byte(string([]rune{Dal, Damma, Noon, Sukun, Yeh}))
 	b = bytes.Replace(b, old, new, -1)
 
 	old = []byte("BUNYAN")
@@ -509,9 +525,9 @@ func exceptionIdgham(b []byte) []byte {
 	new = []byte(string([]rune{Qaf, Kasra, Noon, Sukun, Waw, Fatha, Noon}))
 	b = bytes.Replace(b, old, new, -1)
 
-	old = []byte("NUNWALQALAMI")
+	old = []byte("NUNWALQALAM")
 	new = []byte(string([]rune{Noon, Damma, Noon, Sukun, Waw, Fatha, Lam,
-		Sukun, Qaf, Fatha, Lam, Fatha, Meem, Kasra}))
+		Sukun, Qaf, Fatha, Lam, Fatha, Meem}))
 	b = bytes.Replace(b, old, new, -1)
 
 	return b
