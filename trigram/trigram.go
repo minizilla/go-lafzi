@@ -16,6 +16,26 @@ type Token string
 // from a given sample of text.
 type Trigram []Token
 
+// Position ...
+type Position []int
+
+// JoinString ...
+func (p Position) JoinString(sep string) string {
+	var buf bytes.Buffer
+	for i := 0; i < len(p); i++ {
+		if i != 0 {
+			fmt.Fprintf(&buf, "%s", sep)
+		}
+		fmt.Fprintf(&buf, "%d", p[i])
+	}
+	return buf.String()
+}
+
+// Len returns length of p.
+func (p Position) Len() int {
+	return len(p)
+}
+
 // Count counts number of non-unique token from b.
 func Count(b []byte) int {
 	return utf8.RuneCount(b) - 2
@@ -38,14 +58,14 @@ func Extract(b []byte) Trigram {
 	}
 
 	encountered := make(map[Token]empty)
-	trigram := make(Trigram, tokenCount)
+	trigram := make(Trigram, 0, tokenCount)
 	seq := bytes.Runes(b)
 
 	for i := 0; i < tokenCount; i++ {
 		token := Token(fmt.Sprintf("%c%c%c", seq[i], seq[i+1], seq[i+2]))
 		if _, ok := encountered[token]; !ok {
 			encountered[token] = empty{}
-			trigram[i] = token
+			trigram = append(trigram, token)
 		}
 	}
 
@@ -54,9 +74,9 @@ func Extract(b []byte) Trigram {
 
 // TokenPositions search all positions of tokens appearing in trigram.
 // It returns map with token as key and all the position as value.
-func TokenPositions(b []byte) map[Token][]int {
+func TokenPositions(b []byte) map[Token]Position {
 	trigram := Extract(b)
-	res := make(map[Token][]int)
+	res := make(map[Token]Position)
 
 	for _, token := range trigram {
 		res[token] = indexAll(b, []byte(token))
@@ -70,9 +90,9 @@ func TokenPositions(b []byte) map[Token][]int {
 // Index start with 1 not 0 and search function truncate with overlapping window
 // just like tokenization.
 // The Index is not index of s in byte but index of s utf8 encoded.
-func indexAll(s, sep []byte) []int {
+func indexAll(s, sep []byte) Position {
 	n, i := 0, 0
-	pos := make([]int, 0)
+	pos := make(Position, 0)
 
 	for i != -1 {
 		i = bytes.Index(s, sep)
