@@ -306,7 +306,7 @@ func TestEncode(t *testing.T) {
 		s        []byte
 		expected string
 	}{
-		// Al-Fatihah(1) verse: 1-7
+		// Al-Fatihah(1) verse: 1-7 non-vowel
 		{[]byte("بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ"), "BSMLHRHMNRHM"},
 		{[]byte("ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَـٰلَمِين"), "XLHMDLLHRBLXLMN"},
 		{[]byte("ٱلرَّحْمَـٰنِ ٱلرَّحِيم"), "XRHMNRHM"},
@@ -328,6 +328,37 @@ func TestEncode(t *testing.T) {
 		table.s = iqlabSub(table.s)
 		table.s = idghamSub(table.s)
 		table.s = removeHarakat(table.s)
+		actual := string(encode(table.s)[:])
+		if actual != table.expected {
+			t.Errorf("expected: %s, actual: %s", table.expected, actual)
+		}
+	}
+
+	tables = []struct {
+		s        []byte
+		expected string
+	}{
+		// Al-Fatihah(1) verse: 1-7 with vowel
+		{[]byte("بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ"), "BISMILAHIRAHMANIRAHIM"},
+		{[]byte("ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَـٰلَمِين"), "XALHAMDULILAHIRABILXALAMIN"},
+		{[]byte("ٱلرَّحْمَـٰنِ ٱلرَّحِيم"), "XARAHMANIRAHIM"},
+		{[]byte("مَـٰلِكِ يَوْمِ ٱلدِّين"), "MALIKIYAWMIDIN"},
+		{[]byte("إِيَّاكَ نَعْبُدُ وَإِيَّاكَ نَسْتَعِينُ"), "XIYAKANAXBUDUWAXIYAKANASTAXIN"},
+		{[]byte("ٱهْدِنَا ٱلصِّرَٰطَ ٱلْمُسْتَقِيمَ"), "XAHDINASIRATALMUSTAKIM"},
+		{[]byte("صِرَٰطَ ٱلَّذِينَ أَنْعَمْتَ عَلَيْهِمْ غَيْرِ ٱلْمَغْضُوبِ عَلَيْهِمْ وَلَا ٱلضَّآلِّينَ"), "SIRATALAZINAXANXAMTAXALAYHIMGAYRILMAGDUBIXALAYHIMWALADALIN"},
+	}
+
+	for _, table := range tables {
+		table.s = normalizedUthmani(table.s)
+		table.s = removeSpace(table.s)
+		table.s = removeShadda(table.s)
+		table.s = joinConsonant(table.s)
+		table.s = fixBoundary(table.s)
+		table.s = tanwinSub(table.s)
+		table.s = removeMadda(table.s)
+		table.s = removeUnreadConsonant(table.s)
+		table.s = iqlabSub(table.s)
+		table.s = idghamSub(table.s)
 		actual := string(encode(table.s)[:])
 		if actual != table.expected {
 			t.Errorf("expected: %s, actual: %s", table.expected, actual)
