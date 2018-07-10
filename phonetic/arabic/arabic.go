@@ -1,92 +1,220 @@
-// Package arabic implements phonetic encoding from Arabic language to phonetic code.
+// Package arabic implements arabic-phonetic encoding.
 package arabic
 
 import (
 	"bytes"
 	"io"
+	"regexp"
 	"unicode"
 	"unicode/utf8"
 )
 
-// Consonant characters.
+// length arabic letter in bytes
+var arabicLen = 2
+
+// Letters mode.
 const (
-	Hamzah        = '\u0621'
-	AlifMad       = '\u0622'
-	HamzahAlifA   = '\u0623'
-	HamzahWau     = '\u0624'
-	HamzahAlifI   = '\u0625'
-	HamzahMaqsura = '\u0626'
-	Alif          = '\u0627'
-	Ba            = '\u0628'
-	TaMarbutah    = '\u0629'
-	Ta            = '\u062a'
-	Tsa           = '\u062b'
-	Jim           = '\u062c'
-	Ha            = '\u062d'
-	Kha           = '\u062e'
-	Dal           = '\u062f'
-	Dzal          = '\u0630'
-	Ra            = '\u0631'
-	Za            = '\u0632'
-	Sin           = '\u0633'
-	Syin          = '\u0634'
-	Shad          = '\u0635'
-	Dhad          = '\u0636'
-	Tha           = '\u0637'
-	Zha           = '\u0638'
-	Ain           = '\u0639'
-	Ghain         = '\u063a'
-	Fa            = '\u0641'
-	Qaf           = '\u0642'
-	Kaf           = '\u0643'
-	Lam           = '\u0644'
-	Mim           = '\u0645'
-	Nun           = '\u0646'
-	Hha           = '\u0647'
-	Wau           = '\u0648'
-	AlifMaqsura   = '\u0649'
-	Ya            = '\u064a'
+	LettersSimple  = iota // Contain simple arabic letters
+	LettersUthmani        // Contain simple + uthmani arabic letters
+)
+
+// LettersMode represents which letters is using by input stream
+// when start encoding.
+type LettersMode int
+
+// Consonant characters.
+var (
+	Hamza       = '\u0621' // http://www.fileformat.info/info/unicode/char/0621/index.htm
+	AlefMaddaA  = '\u0622' // http://www.fileformat.info/info/unicode/char/0622/index.htm
+	AlefHamzaA  = '\u0623' // http://www.fileformat.info/info/unicode/char/0623/index.htm
+	WawHamzaA   = '\u0624' // http://www.fileformat.info/info/unicode/char/0624/index.htm
+	AlefHamzaB  = '\u0625' // http://www.fileformat.info/info/unicode/char/0625/index.htm
+	YehHamzaA   = '\u0626' // http://www.fileformat.info/info/unicode/char/0626/index.htm
+	Alef        = '\u0627' // http://www.fileformat.info/info/unicode/char/0627/index.htm
+	Beh         = '\u0628' // http://www.fileformat.info/info/unicode/char/0628/index.htm
+	TehMarbuta  = '\u0629' // http://www.fileformat.info/info/unicode/char/0629/index.htm
+	Teh         = '\u062a' // http://www.fileformat.info/info/unicode/char/062a/index.htm
+	Theh        = '\u062b' // http://www.fileformat.info/info/unicode/char/062b/index.htm
+	Jeem        = '\u062c' // http://www.fileformat.info/info/unicode/char/062c/index.htm
+	Hah         = '\u062d' // http://www.fileformat.info/info/unicode/char/062d/index.htm
+	Khah        = '\u062e' // http://www.fileformat.info/info/unicode/char/062e/index.htm
+	Dal         = '\u062f' // http://www.fileformat.info/info/unicode/char/062f/index.htm
+	Thal        = '\u0630' // http://www.fileformat.info/info/unicode/char/0630/index.htm
+	Reh         = '\u0631' // http://www.fileformat.info/info/unicode/char/0631/index.htm
+	Zain        = '\u0632' // http://www.fileformat.info/info/unicode/char/0632/index.htm
+	Seen        = '\u0633' // http://www.fileformat.info/info/unicode/char/0633/index.htm
+	Sheen       = '\u0634' // http://www.fileformat.info/info/unicode/char/0634/index.htm
+	Sad         = '\u0635' // http://www.fileformat.info/info/unicode/char/0635/index.htm
+	Dad         = '\u0636' // http://www.fileformat.info/info/unicode/char/0636/index.htm
+	Tah         = '\u0637' // http://www.fileformat.info/info/unicode/char/0637/index.htm
+	Zah         = '\u0638' // http://www.fileformat.info/info/unicode/char/0638/index.htm
+	Ain         = '\u0639' // http://www.fileformat.info/info/unicode/char/0639/index.htm
+	Ghain       = '\u063a' // http://www.fileformat.info/info/unicode/char/063a/index.htm
+	Tatweel     = '\u0640' // http://www.fileformat.info/info/unicode/char/0640/index.htm
+	Feh         = '\u0641' // http://www.fileformat.info/info/unicode/char/0641/index.htm
+	Qaf         = '\u0642' // http://www.fileformat.info/info/unicode/char/0642/index.htm
+	Kaf         = '\u0643' // http://www.fileformat.info/info/unicode/char/0643/index.htm
+	Lam         = '\u0644' // http://www.fileformat.info/info/unicode/char/0644/index.htm
+	Meem        = '\u0645' // http://www.fileformat.info/info/unicode/char/0645/index.htm
+	Noon        = '\u0646' // http://www.fileformat.info/info/unicode/char/0646/index.htm
+	Heh         = '\u0647' // http://www.fileformat.info/info/unicode/char/0647/index.htm
+	Waw         = '\u0648' // http://www.fileformat.info/info/unicode/char/0648/index.htm
+	AlefMaksura = '\u0649' // http://www.fileformat.info/info/unicode/char/0649/index.htm
+	Yeh         = '\u064a' // http://www.fileformat.info/info/unicode/char/064a/index.htm
 )
 
 // Vowels characters.
-const (
-	Fathatain  = '\u064b'
-	Dhammatain = '\u064c'
-	Kasratain  = '\u064d'
-	Fathah     = '\u064e'
-	Dhammah    = '\u064f'
-	Kasrah     = '\u0650'
-	Syaddah    = '\u0651'
-	Sukun      = '\u0652'
+var (
+	Fathatan = '\u064b' // http://www.fileformat.info/info/unicode/char/064b/index.htm
+	Dammatan = '\u064c' // http://www.fileformat.info/info/unicode/char/064c/index.htm
+	Kasratan = '\u064d' // http://www.fileformat.info/info/unicode/char/064d/index.htm
+	Fatha    = '\u064e' // http://www.fileformat.info/info/unicode/char/064e/index.htm
+	Damma    = '\u064f' // http://www.fileformat.info/info/unicode/char/064f/index.htm
+	Kasra    = '\u0650' // http://www.fileformat.info/info/unicode/char/0650/index.htm
+	Shadda   = '\u0651' // http://www.fileformat.info/info/unicode/char/0651/index.htm
+	Sukun    = '\u0652' // http://www.fileformat.info/info/unicode/char/0652/index.htm
 )
 
-// Encoder writes phonetic code of arabic language to an output stream.
+// Uthmani characters. Prefix: S = small, H = high, L = low, U = upright,
+// E = empty, C = centre, R = Rounded, F = filled
+var (
+	MaddahA        = '\u0653' // http://www.fileformat.info/info/unicode/char/0653/index.htm
+	HamzaA         = '\u0654' // http://www.fileformat.info/info/unicode/char/0654/index.htm
+	AlefA          = '\u0670' // http://www.fileformat.info/info/unicode/char/0670/index.htm
+	AlefWasla      = '\u0671' // http://www.fileformat.info/info/unicode/char/0671/index.htm
+	SHLigatureSad  = '\u06d6' // http://www.fileformat.info/info/unicode/char/06d6/index.htm
+	SHLigatureQaf  = '\u06d7' // http://www.fileformat.info/info/unicode/char/06d7/index.htm
+	SHMeemInit     = '\u06d8' // http://www.fileformat.info/info/unicode/char/06d8/index.htm
+	SHLamAlef      = '\u06d9' // http://www.fileformat.info/info/unicode/char/06d9/index.htm
+	SHJeem         = '\u06da' // http://www.fileformat.info/info/unicode/char/06da/index.htm
+	SHThreeDots    = '\u06db' // http://www.fileformat.info/info/unicode/char/06db/index.htm
+	SHSeen         = '\u06dc' // http://www.fileformat.info/info/unicode/char/06dc/index.htm
+	RubElHizb      = '\u06de' // http://www.fileformat.info/info/unicode/char/06de/index.htm
+	SHRZero        = '\u06df' // http://www.fileformat.info/info/unicode/char/06df/index.htm
+	SHURectZero    = '\u06e0' // http://www.fileformat.info/info/unicode/char/06e0/index.htm
+	SHMeemIsolated = '\u06e2' // http://www.fileformat.info/info/unicode/char/06e2/index.htm
+	SLSeen         = '\u06e3' // http://www.fileformat.info/info/unicode/char/06e3/index.htm
+	SWaw           = '\u06e5' // http://www.fileformat.info/info/unicode/char/06e5/index.htm
+	SYeh           = '\u06e6' // http://www.fileformat.info/info/unicode/char/06e6/index.htm
+	SHYeh          = '\u06e7' // http://www.fileformat.info/info/unicode/char/06e7/index.htm
+	SHNoon         = '\u06e8' // http://www.fileformat.info/info/unicode/char/06e8/index.htm
+	Sajdah         = '\u06e9' // http://www.fileformat.info/info/unicode/char/06e9/index.htm
+	ECLStop        = '\u06ea' // http://www.fileformat.info/info/unicode/char/06ea/index.htm
+	ECHStop        = '\u06eb' // http://www.fileformat.info/info/unicode/char/06eb/index.htm
+	RHFCStop       = '\u06ec' // http://www.fileformat.info/info/unicode/char/06ec/index.htm
+	SLMeem         = '\u06ed' // http://www.fileformat.info/info/unicode/char/06ed/index.htm
+)
+
+// Encoder writes phonetic code of simple arabic to an output stream.
 type Encoder struct {
-	w io.Writer
+	w           io.Writer
+	lettersMode LettersMode
+	harakat     bool
 }
 
-// NewEncoder returns a new encoder that writes to w.
+// NewEncoder returns a new encoder that writes to w. The default letters mode
+// is LettersSimple.
 func NewEncoder(w io.Writer) *Encoder {
-	return &Encoder{w: w}
+	return &Encoder{w: w, lettersMode: LettersSimple}
 }
 
-// Encode writes phonetic of arabic language of b to the stream.
-// Implementation of encoding based on: https://github.com/lafzi/lafzi-web/blob/master/lib/fonetik.php.
+// SetLettersMode sets letters mode.
+func (enc *Encoder) SetLettersMode(mode LettersMode) {
+	enc.lettersMode = mode
+}
+
+// SetHarakat sets harakat. If set to true encoding will use harakat,
+// Otherwise harakat will be removed.
+func (enc *Encoder) SetHarakat(harakat bool) {
+	enc.harakat = harakat
+}
+
+// Encode writes phonetic code of simple arabic of b to the stream.
+// Implementation of encoding:
+// - simple: https://github.com/lafzi/lafzi-web/blob/master/lib/fonetik.php.
+// - uthmani: https://github.com/lafzi/lafzi-indexer/blob/master/lib/fonetik.php
 func (enc *Encoder) Encode(b []byte) error {
+	if enc.lettersMode == LettersUthmani {
+		b = normalizedUthmani(b)
+	}
 	b = removeSpace(b)
-	b = removeTasydid(b)
+	b = removeShadda(b)
 	b = joinConsonant(b)
 	b = fixBoundary(b)
 	b = tanwinSub(b)
-	b = removeMad(b)
+	b = removeMadda(b)
 	b = removeUnreadConsonant(b)
 	b = iqlabSub(b)
 	b = idghamSub(b)
-	b = removeHarakat(b)
+	if !enc.harakat {
+		b = removeHarakat(b)
+	}
 	b = encode(b)
 
 	_, err := enc.w.Write(b)
 	return err
+}
+
+func normalizedUthmani(b []byte) []byte {
+	b = bytes.Map(func(r rune) rune {
+		switch r {
+		case AlefWasla:
+			return Alef
+		case HamzaA:
+			return Hamza
+		case ECLStop:
+			return Kasra
+		default:
+			return r
+		}
+	}, b)
+
+	b = bytes.Map(func(r rune) rune {
+		if r == MaddahA || r == AlefA ||
+			r == SHLigatureSad || r == SHLigatureQaf ||
+			r == SHMeemInit || r == SHLamAlef ||
+			r == SHJeem || r == SHThreeDots ||
+			r == SHSeen || r == RubElHizb ||
+			r == SHURectZero || r == SWaw ||
+			r == SHMeemIsolated || r == SLSeen ||
+			r == Sajdah || r == ECHStop ||
+			r == RHFCStop || r == SLMeem {
+			return -1
+		}
+		return r
+	}, b)
+
+	old := []byte(string([]rune{SHYeh, Kasra}))
+	new := []byte(string([]rune{Yeh, Kasra}))
+	b = bytes.Replace(b, old, new, -1)
+
+	old = []byte(string([]rune{SHYeh, Shadda}))
+	new = []byte(string([]rune{Yeh, Kasra}))
+	b = bytes.Replace(b, old, new, -1)
+
+	old = []byte(string([]rune{SYeh, Fatha}))
+	new = []byte(string([]rune{Yeh, Fatha}))
+	b = bytes.Replace(b, old, new, -1)
+
+	old = []byte(string([]rune{SHNoon}))
+	new = []byte(string([]rune{Noon, Sukun}))
+	b = bytes.Replace(b, old, new, -1)
+
+	old = []byte(string([]rune{Yeh, SHRZero}))
+	new = []byte("")
+	b = bytes.Replace(b, old, new, -1)
+
+	old = []byte(string([]rune{Theh, ' '}))
+	new = []byte(string([]rune{Theh, Sukun}))
+	b = bytes.Replace(b, old, new, -1)
+
+	b = regexp.MustCompile("^اقْتَرَبَ").
+		ReplaceAll(b, []byte("إِقْتَرَبَ"))
+
+	b = regexp.MustCompile("^اقْرَ").
+		ReplaceAll(b, []byte("إِقْرَ"))
+
+	return b
 }
 
 func removeSpace(b []byte) []byte {
@@ -98,9 +226,9 @@ func removeSpace(b []byte) []byte {
 	}, b)
 }
 
-func removeTasydid(b []byte) []byte {
+func removeShadda(b []byte) []byte {
 	return bytes.Map(func(r rune) rune {
-		if r == Syaddah {
+		if r == Shadda {
 			return -1
 		}
 		return r
@@ -135,39 +263,37 @@ func joinConsonant(b []byte) []byte {
 	return buf[:n]
 }
 
-var arabicLen = 2
-
 func fixBoundary(b []byte) []byte {
 	runes := bytes.Runes(b)
 
 	l := len(runes)
 	r := runes[l-1]
-	if r == Alif || r == AlifMaqsura {
-		// deletes if ended with alif / alif maqsura (without harakat)
+	if r == Alef || r == AlefMaksura {
+		// deletes if ended with alef / alef maksura (without harakat)
 		runes = runes[:l-1]
-	} else if r == Fathah || r == Kasrah || r == Dhammah ||
-		r == Fathatain || r == Kasratain || r == Dhammatain {
+	} else if r == Fatha || r == Kasra || r == Damma ||
+		r == Fathatan || r == Kasratan || r == Dammatan {
 		// if ended up with harakat / tanwin, substitute with sukun
 		runes[l-1] = Sukun
 	}
 
 	l = len(runes)
 	r = runes[l-1]
-	if r == Fathatain {
-		// if ended up with fathatain, substitute with fathah
-		runes[l-1] = Fathah
+	if r == Fathatan {
+		// if ended up with fathatan, substitute with fatha
+		runes[l-1] = Fatha
 	}
 
 	r = runes[l-2]
-	if r == TaMarbutah {
-		// if ended up with ta marbutah, substitute with hha
-		runes[l-2] = Hha
+	if r == TehMarbuta {
+		// if ended up with teh marbuta, substitute with heh
+		runes[l-2] = Heh
 	}
 
 	r = runes[0]
-	if r == Alif {
-		runes[0] = Fathah
-		runes = append([]rune{HamzahAlifA}, runes...)
+	if r == Alef {
+		runes[0] = Fatha
+		runes = append([]rune{AlefHamzaA}, runes...)
 	}
 
 	// buf large enough to encode rune
@@ -181,18 +307,18 @@ func fixBoundary(b []byte) []byte {
 }
 
 func tanwinSub(b []byte) []byte {
-	old := []byte(string(Fathatain))
-	r := []rune{Fathah, Nun, Sukun}
+	old := []byte(string(Fathatan))
+	r := []rune{Fatha, Noon, Sukun}
 	new := []byte(string(r))
 	b = bytes.Replace(b, old, new, -1)
 
-	old = []byte(string(Kasratain))
-	r = []rune{Kasrah, Nun, Sukun}
+	old = []byte(string(Kasratan))
+	r = []rune{Kasra, Noon, Sukun}
 	new = []byte(string(r))
 	b = bytes.Replace(b, old, new, -1)
 
-	old = []byte(string(Dhammatain))
-	r = []rune{Dhammah, Nun, Sukun}
+	old = []byte(string(Dammatan))
+	r = []rune{Damma, Noon, Sukun}
 	new = []byte(string(r))
 	b = bytes.Replace(b, old, new, -1)
 
@@ -200,18 +326,18 @@ func tanwinSub(b []byte) []byte {
 }
 
 func isHarakat(r rune) bool {
-	return r == Fathah || r == Kasrah || r == Dhammah
+	return r == Fatha || r == Kasra || r == Damma
 }
 
 func isTanwin(r rune) bool {
-	return r == Fathatain || r == Kasratain || r == Dhammatain
+	return r == Fathatan || r == Kasratan || r == Dammatan
 }
 
 func isVowel(r rune) bool {
-	return isHarakat(r) || isTanwin(r) || r == Syaddah || r == Sukun
+	return isHarakat(r) || isTanwin(r) || r == Shadda || r == Sukun
 }
 
-func removeMad(b []byte) []byte {
+func removeMadda(b []byte) []byte {
 	buf := make([]byte, len(b))
 	runes := bytes.Runes(b)
 	n := 0
@@ -228,9 +354,9 @@ func removeMad(b []byte) []byte {
 			next2 = runes[i+2]
 		}
 
-		if (curr == Fathah && (next1 == Alif || next1 == AlifMaqsura) && !isHarakat(next2)) ||
-			(curr == Kasrah && next1 == Ya && !isHarakat(next2)) ||
-			(curr == Dhammah && next1 == Wau && !isHarakat(next2)) {
+		if (curr == Fatha && next1 == Alef && !isHarakat(next2)) ||
+			(curr == Kasra && next1 == Yeh && !isHarakat(next2)) ||
+			(curr == Damma && next1 == Waw && !isHarakat(next2)) {
 			n += utf8.EncodeRune(buf[n:], curr)
 			n += utf8.EncodeRune(buf[n:], next2)
 			i += 2
@@ -239,8 +365,8 @@ func removeMad(b []byte) []byte {
 		}
 	}
 
-	old := []byte(string(AlifMad))
-	r := []rune{HamzahAlifA, Fathah}
+	old := []byte(string(AlefMaddaA))
+	r := []rune{AlefHamzaA, Fatha}
 	new := []byte(string(r))
 	buf = bytes.Replace(buf[:n], old, new, -1)
 
@@ -296,28 +422,28 @@ func removeUnreadConsonant(b []byte) []byte {
 }
 
 func iqlabSub(b []byte) []byte {
-	old := []byte(string([]rune{Nun, Sukun, Ba}))
-	new := []byte(string([]rune{Mim, Sukun, Ba}))
+	old := []byte(string([]rune{Noon, Sukun, Beh}))
+	new := []byte(string([]rune{Meem, Sukun, Beh}))
 	bytes.Replace(b, old, new, -1)
 
 	return b
 }
 
 func idghamSub(b []byte) []byte {
-	old := []byte(string([]rune{Nun, Sukun, Nun}))
-	new := []byte(string(Nun))
+	old := []byte(string([]rune{Noon, Sukun, Noon}))
+	new := []byte(string(Noon))
 	b = bytes.Replace(b, old, new, -1)
 
-	old = []byte(string([]rune{Nun, Sukun, Mim}))
-	new = []byte(string(Mim))
+	old = []byte(string([]rune{Noon, Sukun, Meem}))
+	new = []byte(string(Meem))
 	b = bytes.Replace(b, old, new, -1)
 
-	old = []byte(string([]rune{Nun, Sukun, Lam}))
+	old = []byte(string([]rune{Noon, Sukun, Lam}))
 	new = []byte(string(Lam))
 	b = bytes.Replace(b, old, new, -1)
 
-	old = []byte(string([]rune{Nun, Sukun, Ra}))
-	new = []byte(string(Ra))
+	old = []byte(string([]rune{Noon, Sukun, Reh}))
+	new = []byte(string(Reh))
 	b = bytes.Replace(b, old, new, -1)
 
 	b = exceptionIdgham(b)
@@ -327,46 +453,65 @@ func idghamSub(b []byte) []byte {
 
 func exceptionIdgham(b []byte) []byte {
 	// exception
-	old := []byte(string([]rune{Dzal, Dhammah, Nun, Sukun, Ya}))
+	old := []byte(string([]rune{Thal, Damma, Noon, Sukun, Yeh}))
 	new := []byte("DUNYA")
 	b = bytes.Replace(b, old, new, -1)
 
-	old = []byte(string([]rune{Ba, Dhammah, Nun, Sukun, Ya, Fathah, Nun}))
+	old = []byte(string([]rune{Beh, Damma, Noon, Sukun, Yeh, Fatha, Noon}))
 	new = []byte("BUNYAN")
 	b = bytes.Replace(b, old, new, -1)
 
-	old = []byte(string([]rune{Shad, Kasrah, Nun, Sukun, Wau, Fathah, Nun}))
+	old = []byte(string([]rune{Sad, Kasra, Noon, Sukun, Waw, Fatha, Noon}))
 	new = []byte("SINWAN")
 	b = bytes.Replace(b, old, new, -1)
 
-	old = []byte(string([]rune{Qaf, Kasrah, Nun, Sukun, Wau, Fathah, Nun}))
+	old = []byte(string([]rune{Qaf, Kasra, Noon, Sukun, Waw, Fatha, Noon}))
 	new = []byte("QINWAN")
 	b = bytes.Replace(b, old, new, -1)
 
-	// substitute idgham
-	old = []byte(string([]rune{Nun, Sukun, Ya}))
-	new = []byte(string(Ya))
+	old = []byte(string([]rune{Noon, Damma, Noon, Sukun, Waw, Fatha, Lam,
+		Sukun, Qaf, Fatha, Lam, Fatha, Meem, Kasra}))
+	new = []byte("NUNWALQALAMI")
 	b = bytes.Replace(b, old, new, -1)
 
-	old = []byte(string([]rune{Nun, Sukun, Wau}))
-	new = []byte(string(Wau))
+	// substitute idgham
+	old = []byte(string([]rune{Noon, Sukun, Yeh}))
+	new = []byte(string(Yeh))
+	b = bytes.Replace(b, old, new, -1)
+
+	old = []byte(string([]rune{Noon, Sukun, Waw}))
+	new = []byte(string(Waw))
+	b = bytes.Replace(b, old, new, -1)
+
+	// uthmani idgham
+	old = []byte(string([]rune{Noon, Yeh}))
+	new = []byte(string(Yeh))
+	b = bytes.Replace(b, old, new, -1)
+
+	old = []byte(string([]rune{Noon, Waw}))
+	new = []byte(string(Waw))
 	b = bytes.Replace(b, old, new, -1)
 
 	// returned it again
 	old = []byte("DUNYA")
-	new = []byte(string([]rune{Dzal, Dhammah, Nun, Sukun, Ya}))
+	new = []byte(string([]rune{Thal, Damma, Noon, Sukun, Yeh}))
 	b = bytes.Replace(b, old, new, -1)
 
 	old = []byte("BUNYAN")
-	new = []byte(string([]rune{Ba, Dhammah, Nun, Sukun, Ya, Fathah, Nun}))
+	new = []byte(string([]rune{Beh, Damma, Noon, Sukun, Yeh, Fatha, Noon}))
 	b = bytes.Replace(b, old, new, -1)
 
 	old = []byte("SINWAN")
-	new = []byte(string([]rune{Shad, Kasrah, Nun, Sukun, Wau, Fathah, Nun}))
+	new = []byte(string([]rune{Sad, Kasra, Noon, Sukun, Waw, Fatha, Noon}))
 	b = bytes.Replace(b, old, new, -1)
 
 	old = []byte("QINWAN")
-	new = []byte(string([]rune{Qaf, Kasrah, Nun, Sukun, Wau, Fathah, Nun}))
+	new = []byte(string([]rune{Qaf, Kasra, Noon, Sukun, Waw, Fatha, Noon}))
+	b = bytes.Replace(b, old, new, -1)
+
+	old = []byte("NUNWALQALAMI")
+	new = []byte(string([]rune{Noon, Damma, Noon, Sukun, Waw, Fatha, Lam,
+		Sukun, Qaf, Fatha, Lam, Fatha, Meem, Kasra}))
 	b = bytes.Replace(b, old, new, -1)
 
 	return b
@@ -374,21 +519,21 @@ func exceptionIdgham(b []byte) []byte {
 
 func removeHarakat(b []byte) []byte {
 	b = bytes.Map(func(r rune) rune {
-		if r == Fathah {
+		if r == Fatha {
 			return -1
 		}
 		return r
 	}, b)
 
 	b = bytes.Map(func(r rune) rune {
-		if r == Kasrah {
+		if r == Kasra {
 			return -1
 		}
 		return r
 	}, b)
 
 	b = bytes.Map(func(r rune) rune {
-		if r == Dhammah {
+		if r == Damma {
 			return -1
 		}
 		return r
@@ -420,43 +565,53 @@ func encode(b []byte) []byte {
 
 func mapping() map[rune]rune {
 	return map[rune]rune{
-		Jim:           'Z',
-		Za:            'Z',
-		Zha:           'Z',
-		Dzal:          'Z',
-		Hha:           'H',
-		Kha:           'H',
-		Ha:            'H',
-		Hamzah:        'X',
-		HamzahAlifA:   'X',
-		HamzahAlifI:   'X',
-		HamzahMaqsura: 'X',
-		HamzahWau:     'X',
-		Alif:          'X',
-		Ain:           'X',
-		Shad:          'S',
-		Tsa:           'S',
-		Syin:          'S',
-		Sin:           'S',
-		Dhad:          'D',
-		Dal:           'D',
-		TaMarbutah:    'T',
-		Ta:            'T',
-		Tha:           'T',
-		Qaf:           'K',
-		Kaf:           'K',
-		Ghain:         'G',
-		Fa:            'F',
-		Mim:           'M',
-		Nun:           'N',
-		Lam:           'L',
-		Ba:            'B',
-		Ya:            'Y',
-		Wau:           'W',
-		Ra:            'R',
-		Fathah:        'A',
-		Kasrah:        'I',
-		Dhammah:       'U',
+		Jeem: 'Z',
+		Zain: 'Z',
+		Zah:  'Z',
+		Thal: 'Z',
+
+		Heh:  'H',
+		Khah: 'H',
+		Hah:  'H',
+
+		Hamza:      'X',
+		AlefHamzaA: 'X',
+		AlefHamzaB: 'X',
+		YehHamzaA:  'X',
+		WawHamzaA:  'X',
+		Alef:       'X',
+		Ain:        'X',
+
+		Sad:   'S',
+		Theh:  'S',
+		Sheen: 'S',
+		Seen:  'S',
+
+		Dad: 'D',
+		Dal: 'D',
+
+		TehMarbuta: 'T',
+		Teh:        'T',
+		Tah:        'T',
+
+		Qaf: 'K',
+		Kaf: 'K',
+
+		Yeh:         'Y',
+		AlefMaksura: 'Y',
+
+		Ghain: 'G',
+		Feh:   'F',
+		Meem:  'M',
+		Noon:  'N',
+		Lam:   'L',
+		Beh:   'B',
+		Waw:   'W',
+		Reh:   'R',
+
+		Fatha: 'A',
+		Kasra: 'I',
+		Damma: 'U',
 		// Sukun:         '',	// empty character literal or unescaped ' in character literal
 	}
 }
