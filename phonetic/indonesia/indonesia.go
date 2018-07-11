@@ -1,28 +1,20 @@
-// Package indonesia implements phonetic encoding from Indonesian language to phonetic code.
+// Package indonesia implements indonesia-phonetic encoding.
+// Implementation of encoding based on: https://github.com/lafzi/lafzi-web/blob/master/lib/fonetik_id.php.
 package indonesia
 
 import (
 	"bytes"
-	"io"
 	"regexp"
 
 	"github.com/dlclark/regexp2"
 )
 
-// Encoder writes phonetic code of indonesian language to an output stream.
-type Encoder struct {
-	w io.Writer
-}
+// Encoder implements indonesia-phonetic encoding.
+type Encoder struct{}
 
-// NewEncoder returns a new encoder that writes to w.
-func NewEncoder(w io.Writer) *Encoder {
-	return &Encoder{w: w}
-}
-
-// Encode writes phonetic of indonesian language of b to the stream.
-// Implementation of encoding based on: https://github.com/lafzi/lafzi-web/blob/master/lib/fonetik_id.php.
-func (enc *Encoder) Encode(b []byte) error {
-	b = praprocess(b)
+// Encode returns encoded of src using encoding enc.
+func (enc *Encoder) Encode(src []byte) []byte {
+	b := praprocess(src)
 	b = vowelSub(b)
 	b = joinConsonant(b)
 	b = joinVowel(b)
@@ -36,8 +28,7 @@ func (enc *Encoder) Encode(b []byte) error {
 	b = removeSpace(b)
 	b = removeVowel(b)
 
-	_, err := enc.w.Write(b)
-	return err
+	return b
 }
 
 func praprocess(b []byte) []byte {

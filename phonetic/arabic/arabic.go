@@ -1,9 +1,11 @@
 // Package arabic implements arabic-phonetic encoding.
+// Implementation of encoding based on:
+// - simple: https://github.com/lafzi/lafzi-web/blob/master/lib/fonetik.php.
+// - uthmani: https://github.com/lafzi/lafzi-indexer/blob/master/lib/fonetik.php
 package arabic
 
 import (
 	"bytes"
-	"io"
 	"regexp"
 	"unicode"
 	"unicode/utf8"
@@ -105,37 +107,29 @@ var (
 	SLMeem         = '\u06ed' // http://www.fileformat.info/info/unicode/char/06ed/index.htm
 )
 
-// Encoder writes phonetic code of simple arabic to an output stream.
+// Encoder implements arabic-phonetic encoding.
 type Encoder struct {
-	w           io.Writer
 	lettersMode LettersMode
 	harakat     bool
 }
 
-// NewEncoder returns a new encoder that writes to w. The default letters mode
-// is LettersSimple.
-func NewEncoder(w io.Writer) *Encoder {
-	return &Encoder{w: w, lettersMode: LettersSimple}
-}
-
-// SetLettersMode sets letters mode.
+// SetLettersMode sets letters mode. Default letters mode is
+// LettersSimple.
 func (enc *Encoder) SetLettersMode(mode LettersMode) {
 	enc.lettersMode = mode
 }
 
 // SetHarakat sets harakat. If set to true encoding will use harakat,
-// Otherwise harakat will be removed.
+// Otherwise harakat will be removed. Default is false.
 func (enc *Encoder) SetHarakat(harakat bool) {
 	enc.harakat = harakat
 }
 
-// Encode writes phonetic code of simple arabic of b to the stream.
-// Implementation of encoding:
-// - simple: https://github.com/lafzi/lafzi-web/blob/master/lib/fonetik.php.
-// - uthmani: https://github.com/lafzi/lafzi-indexer/blob/master/lib/fonetik.php
-func (enc *Encoder) Encode(b []byte) error {
+// Encode returns encoded of src using encoding enc.
+func (enc *Encoder) Encode(src []byte) []byte {
+	var b []byte
 	if enc.lettersMode == LettersUthmani {
-		b = normalizedUthmani(b)
+		b = normalizedUthmani(src)
 	}
 	b = removeSpace(b)
 	b = removeShadda(b)
@@ -151,8 +145,7 @@ func (enc *Encoder) Encode(b []byte) error {
 	}
 	b = encode(b)
 
-	_, err := enc.w.Write(b)
-	return err
+	return b
 }
 
 func normalizedUthmani(b []byte) []byte {
