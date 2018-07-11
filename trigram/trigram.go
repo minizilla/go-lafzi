@@ -19,6 +19,12 @@ type Trigram []Token
 // Position ...
 type Position []int
 
+// TokenPosition ...
+type TokenPosition struct {
+	Token
+	Position
+}
+
 // JoinString ...
 func (p Position) JoinString(sep string) string {
 	var buf bytes.Buffer
@@ -74,12 +80,12 @@ func Extract(b []byte) Trigram {
 
 // TokenPositions search all positions of tokens appearing in trigram.
 // It returns map with token as key and all the position as value.
-func TokenPositions(b []byte) map[Token]Position {
+func TokenPositions(b []byte) []TokenPosition {
 	trigram := Extract(b)
-	res := make(map[Token]Position)
+	res := make([]TokenPosition, 0, len(trigram))
 
 	for _, token := range trigram {
-		res[token] = indexAll(b, []byte(token))
+		res = append(res, TokenPosition{token, indexAll(b, []byte(token))})
 	}
 
 	return res
