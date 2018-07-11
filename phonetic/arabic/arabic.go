@@ -169,22 +169,6 @@ func normalizedUthmani(b []byte) []byte {
 		}
 	}, b)
 
-	b = bytes.Map(func(r rune) rune {
-		if r == MaddahA || r == AlefA ||
-			r == SHLigatureSad || r == SHLigatureQaf ||
-			r == SHMeemInit || r == SHLamAlef ||
-			r == SHJeem || r == SHThreeDots ||
-			r == SHSeen || r == RubElHizb ||
-			r == SHURectZero || r == SWaw ||
-			r == SHMeemIsolated || r == SLSeen ||
-			r == Sajdah || r == ECHStop ||
-			r == RHFCStop || r == SLMeem ||
-			r == Tatweel {
-			return -1
-		}
-		return r
-	}, b)
-
 	old := []byte(string([]rune{SHYeh, Kasra}))
 	new := []byte(string([]rune{Yeh, Kasra}))
 	b = bytes.Replace(b, old, new, -1)
@@ -208,6 +192,22 @@ func normalizedUthmani(b []byte) []byte {
 	old = []byte(string([]rune{Theh, ' '}))
 	new = []byte(string([]rune{Theh, Sukun}))
 	b = bytes.Replace(b, old, new, -1)
+
+	b = bytes.Map(func(r rune) rune {
+		if r == MaddahA || r == AlefA ||
+			r == SHLigatureSad || r == SHLigatureQaf ||
+			r == SHMeemInit || r == SHLamAlef ||
+			r == SHJeem || r == SHThreeDots ||
+			r == SHSeen || r == RubElHizb ||
+			r == SHURectZero || r == SWaw ||
+			r == SHMeemIsolated || r == SLSeen ||
+			r == Sajdah || r == ECHStop ||
+			r == RHFCStop || r == SLMeem ||
+			r == Tatweel || r == SHRZero {
+			return -1
+		}
+		return r
+	}, b)
 
 	b = regexp.MustCompile("^اقْتَرَبَ").
 		ReplaceAll(b, []byte("إِقْتَرَبَ"))
@@ -360,7 +360,7 @@ func removeMadda(b []byte) []byte {
 		}
 
 		if next2 != utf8.RuneError &&
-			((curr == Fatha && (next1 == Alef || next1 == AlefMaksura) && !isHarakat(next2)) ||
+			((curr == Fatha && next1 == Alef && !isHarakat(next2)) ||
 				(curr == Kasra && next1 == Yeh && !isHarakat(next2)) ||
 				(curr == Damma && next1 == Waw && !isHarakat(next2))) {
 			n += utf8.EncodeRune(buf[n:], curr)
@@ -403,7 +403,7 @@ func rmvUnreadCons(b []byte) []byte {
 		}
 
 		if next != utf8.RuneError && !isVowel(curr) && !isVowel(next) &&
-			curr != Noon && curr != Meem {
+			curr != Noon && curr != Meem && curr != Dal {
 			// if current and next one is non-vowel then remove the current one
 			// except noon and meem (uthmani)
 			n += utf8.EncodeRune(buf[n:], next)

@@ -16,6 +16,8 @@ func TestNormalizedUthmani(t *testing.T) {
 			string([]rune{Alef, Hamza})},
 		{[]byte("اقْتَرَبَ"), "إِقْتَرَبَ"},
 		{[]byte("اقْرَ"), "إِقْرَ"},
+		// Adz-Dzariyat(51) verse: 47
+		{[]byte("بِأَيْي۟دٍۢ"), "بِأَيْدٍ"},
 	}
 
 	for _, table := range tables {
@@ -152,7 +154,7 @@ func TestRemoveMadda(t *testing.T) {
 		expected string
 	}{
 		// Al-Baqarah(2) verse: 143 (fatha + alef + non-harakat -> fatha + non-harakat)
-		{[]byte("عَلَى ٱلنَّاسِ"), "عَلَالنَسْ"},
+		{[]byte("عَلَى ٱلنَّاسِ"), "عَلَىالنَسْ"},
 		// Ali-Imran(3) verse: 44 (kasra + yeh + non-harakat -> kasra + non-harakat)
 		{[]byte("غَلِيظَ"), "غَلِظْ"},
 		// Al-Baqarah(2) verse: 143 (damma + waw + non-harakat -> damma + non-harakat)
@@ -182,6 +184,8 @@ func TestRemoveUnreadConsonant(t *testing.T) {
 		{[]byte("عَلَى ٱلنَّاسِ"), "عَلَنَسْ"},
 		// Ali-Imran(3) verse: 44 (single remove: yeh)
 		{[]byte("غَلِيظَ"), "غَلِظْ"},
+		// Al-Baqarah(2) verse: 102
+		{[]byte("تَتْلُوا۟ ٱلشَّيَـٰطِينُ"), "تَتْلُشَيَطِنْ"},
 	}
 
 	for _, table := range tables {
@@ -339,13 +343,17 @@ func TestEncode(t *testing.T) {
 		expected string
 	}{
 		// Al-Fatihah(1) verse: 1-7 with vowel
-		{[]byte("بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ"), "BISMILAHIRAHMANIRAHIM"},
-		{[]byte("ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَـٰلَمِين"), "XALHAMDULILAHIRABILXALAMIN"},
-		{[]byte("ٱلرَّحْمَـٰنِ ٱلرَّحِيم"), "XARAHMANIRAHIM"},
-		{[]byte("مَـٰلِكِ يَوْمِ ٱلدِّين"), "MALIKIYAWMIDIN"},
-		{[]byte("إِيَّاكَ نَعْبُدُ وَإِيَّاكَ نَسْتَعِينُ"), "XIYAKANAXBUDUWAXIYAKANASTAXIN"},
-		{[]byte("ٱهْدِنَا ٱلصِّرَٰطَ ٱلْمُسْتَقِيمَ"), "XAHDINASIRATALMUSTAKIM"},
-		{[]byte("صِرَٰطَ ٱلَّذِينَ أَنْعَمْتَ عَلَيْهِمْ غَيْرِ ٱلْمَغْضُوبِ عَلَيْهِمْ وَلَا ٱلضَّآلِّينَ"), "SIRATALAZINAXANXAMTAXALAYHIMGAYRILMAGDUBIXALAYHIMWALADALIN"},
+		{[]byte("بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ"), "BSMLHRHMNRHM"},
+		{[]byte("ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَـٰلَمِين"), "XLHMDLLHRBLXLMN"},
+		{[]byte("ٱلرَّحْمَـٰنِ ٱلرَّحِيم"), "XRHMNRHM"},
+		{[]byte("مَـٰلِكِ يَوْمِ ٱلدِّين"), "MLKYWMDN"},
+		{[]byte("إِيَّاكَ نَعْبُدُ وَإِيَّاكَ نَسْتَعِينُ"), "XYKNXBDWXYKNSTXN"},
+		{[]byte("ٱهْدِنَا ٱلصِّرَٰطَ ٱلْمُسْتَقِيمَ"), "XHDNSRTLMSTKM"},
+		{[]byte("صِرَٰطَ ٱلَّذِينَ أَنْعَمْتَ عَلَيْهِمْ غَيْرِ ٱلْمَغْضُوبِ عَلَيْهِمْ وَلَا ٱلضَّآلِّينَ"), "SRTLZNXNXMTXLYHMGYRLMGDBXLYHMWLDLN"},
+		// Al-Baqarah(2) verse: 20 (alef maksura bug)
+		{[]byte("إِنَّ ٱللَّهَ عَلَىٰ كُلِّ شَىْءٍۢ قَدِيرٌۭ"), "XNLHXLKLSYXNKDR"},
+		// Adz-Dzariyat(51) verse: 47
+		{[]byte("وَٱلسَّمَآءَ بَنَيْنَـٰهَا بِأَيْي۟دٍۢ وَإِنَّا لَمُوسِعُونَ"), "WSMXBNYNHBXYDWXNLMSXN"},
 	}
 
 	for _, table := range tables {
@@ -359,6 +367,7 @@ func TestEncode(t *testing.T) {
 		table.s = removeUnreadConsonant(table.s)
 		table.s = iqlabSub(table.s)
 		table.s = idghamSub(table.s)
+		table.s = removeHarakat(table.s)
 		actual := string(encode(table.s)[:])
 		if actual != table.expected {
 			t.Errorf("expected: %s, actual: %s", table.expected, actual)
