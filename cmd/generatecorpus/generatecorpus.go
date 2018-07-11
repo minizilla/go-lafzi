@@ -51,16 +51,16 @@ func main() {
 		// [2] = ayat number
 		// [3] = ayat text
 		data := bytes.Split(sc.Bytes(), []byte("|"))
-		var phonetic bytes.Buffer
-		encoder := arabic.NewEncoder(&phonetic)
+		var encoder arabic.Encoder
 		encoder.SetLettersMode(arabic.LettersUthmani)
 		encoder.SetHarakat(*vowel)
+		phonetic := encoder.Encode(data[3])
 		if err := encoder.Encode(data[3]); err != nil {
 			log.Fatal(err)
 		}
 
 		fmt.Printf("%d. Processing surat {%s} ayat {%s}\n", id, data[0], data[2])
-		fmt.Fprintf(fWriter, "%d|%s\n", id, phonetic.String())
+		fmt.Fprintf(fWriter, "%d|%s\n", id, string(phonetic[:]))
 		count++
 		id++
 
