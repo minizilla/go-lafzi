@@ -41,12 +41,12 @@ func TestTokenPosition(t *testing.T) {
 		{"CAB", []int{3, 6}},
 	}
 	tr := trigram.TokenPositions(s)
-	for _, table := range tables {
-		if len(table.expected) != len(tr[table.token]) {
+	for i, table := range tables {
+		if len(table.expected) != len(tr[i].Position) {
 			t.Errorf("token: %s error, expected len: %d, actual len: %d", table.token, len(table.expected), len(tr))
 		}
-		for i, expectedPos := range table.expected {
-			actualPos := tr[table.token][i]
+		for j, expectedPos := range table.expected {
+			actualPos := tr[i].Position[j]
 			if expectedPos != actualPos {
 				t.Errorf("token: %s error, expected pos: %d, actual pos: %d", table.token, expectedPos, actualPos)
 			}
