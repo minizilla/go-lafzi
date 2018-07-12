@@ -71,7 +71,7 @@ func (idx *Index) ParseTermlist() error {
 		}
 		offset := int64(i)
 		if prevToken != "" {
-			n := offset - prevOffset
+			n := (offset - prevOffset) - 1
 			idx.terms[prevToken] = line{prevOffset, n}
 		}
 		prevOffset = offset
@@ -192,5 +192,6 @@ func (idx *Index) Search(query []byte) (string, []document.Document) {
 	}
 
 	// [5] search result
-	return string(queryPhonetic[:]), docs[:min]
+	// return string(queryPhonetic[:]), docs[:min]
+	return string(queryPhonetic[:]), docs[:3]
 }
