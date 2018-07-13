@@ -561,66 +561,64 @@ func removeHarakat(b []byte) []byte {
 func encode(b []byte) []byte {
 	buf := make([]byte, len(b))
 	runes := bytes.Runes(b)
-	m := mapping()
 	n := 0
 	for _, r := range runes {
-		if _, ok := m[r]; ok {
-			n += utf8.EncodeRune(buf[n:], m[r])
+		if phon, ok := Mapping[r]; ok {
+			n += utf8.EncodeRune(buf[n:], phon)
 		}
 	}
 
 	return buf[:n]
 }
 
-func mapping() map[rune]rune {
-	return map[rune]rune{
-		Jeem: 'Z',
-		Zain: 'Z',
-		Zah:  'Z',
-		Thal: 'Z',
+// Mapping arabic letters to phonetic code
+var Mapping = map[rune]rune{
+	Jeem: 'Z',
+	Zain: 'Z',
+	Zah:  'Z',
+	Thal: 'Z',
 
-		Heh:  'H',
-		Khah: 'H',
-		Hah:  'H',
+	Heh:  'H',
+	Khah: 'H',
+	Hah:  'H',
 
-		Hamza:      'X',
-		AlefHamzaA: 'X',
-		AlefHamzaB: 'X',
-		YehHamzaA:  'X',
-		WawHamzaA:  'X',
-		Alef:       'X',
-		Ain:        'X',
+	Hamza:      'X',
+	AlefHamzaA: 'X',
+	AlefHamzaB: 'X',
+	YehHamzaA:  'X',
+	WawHamzaA:  'X',
+	Alef:       'X',
+	Ain:        'X',
 
-		Sad:   'S',
-		Theh:  'S',
-		Sheen: 'S',
-		Seen:  'S',
+	Sad:   'S',
+	Theh:  'S',
+	Sheen: 'S',
+	Seen:  'S',
 
-		Dad: 'D',
-		Dal: 'D',
+	Dad: 'D',
+	Dal: 'D',
 
-		TehMarbuta: 'T',
-		Teh:        'T',
-		Tah:        'T',
+	TehMarbuta: 'T',
+	Teh:        'T',
+	Tah:        'T',
 
-		Qaf: 'K',
-		Kaf: 'K',
+	Qaf: 'K',
+	Kaf: 'K',
 
-		Yeh:         'Y',
-		AlefMaksura: 'Y',
+	Yeh:         'Y',
+	AlefMaksura: 'Y',
 
-		Ghain: 'G',
-		Feh:   'F',
-		Meem:  'M',
-		Noon:  'N',
-		Lam:   'L',
-		Beh:   'B',
-		Waw:   'W',
-		Reh:   'R',
+	Ghain: 'G',
+	Feh:   'F',
+	Meem:  'M',
+	Noon:  'N',
+	Lam:   'L',
+	Beh:   'B',
+	Waw:   'W',
+	Reh:   'R',
 
-		Fatha: 'A',
-		Kasra: 'I',
-		Damma: 'U',
-		// Sukun:         '',	// empty character literal or unescaped ' in character literal
-	}
+	Fatha: 'A',
+	Kasra: 'I',
+	Damma: 'U',
+	// Sukun:         '',	// empty character literal or unescaped ' in character literal
 }
