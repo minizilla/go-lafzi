@@ -104,8 +104,8 @@ func TestFixBoundary(t *testing.T) {
 		{[]byte("بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ"), "بِسْمِالَهِالرَحْمَنِالرَحِيمْ"},
 		// Al-Kahfi(19) verse: 16 (alef ending then fathatan -> fatha)
 		{[]byte("لَكُم مِّنْ أَمْرِكُم مِّرْفَقًا"), "لَكُمِنْأَمْرِكُمِرْفَقَ"},
-		// Al-A'raf(7) verse: 160 (consonant ending -> same, alef start -> alef hamza above + fatha)
-		{[]byte("ٱضْرِب بِّعَصَاكَ ٱلْحَجَر"), "أَضْرِبِعَصَاكَالْحَجَر"},
+		// Al-A'raf(7) verse: 160 (consonant ending -> same, alef start -> alef hamza above + fatha + alef)
+		{[]byte("ٱضْرِب بِّعَصَاكَ ٱلْحَجَر"), "أَاضْرِبِعَصَاكَالْحَجَر"},
 		// Ar-Rum(30) verse: 21 (harakat ending then teh marbuta -> heh + sukun)
 		{[]byte("مَّوَدَّةً وَرَحْمَةً"), "مَوَدَةًوَرَحْمَهْ"},
 	}
@@ -159,6 +159,8 @@ func TestRemoveMadda(t *testing.T) {
 		{[]byte("غَلِيظَ"), "غَلِظْ"},
 		// Al-Baqarah(2) verse: 143 (damma + waw + non-harakat -> damma + non-harakat)
 		{[]byte("لَرَءُوفٌ رَّحِيمٌ"), "لَرَءُفُنْرَحِمْ"},
+		// Al-Fatihah(1) verse: 5
+		{[]byte("إِيَّاكَ نَعْبُدُ وَإِيَّاكَ نَسْتَعِينُ"), "إِيَكَنَعْبُدُوَإِيَكَنَسْتَعِنْ"},
 	}
 
 	for _, table := range tables {

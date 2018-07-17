@@ -148,6 +148,11 @@ func (enc *Encoder) Encode(src []byte) []byte {
 	return b
 }
 
+// NormalizedUthmani ...
+func NormalizedUthmani(b []byte) []byte {
+	return normalizedUthmani(b)
+}
+
 func normalizedUthmani(b []byte) []byte {
 	b = bytes.Map(func(r rune) rune {
 		switch r {
@@ -211,6 +216,11 @@ func normalizedUthmani(b []byte) []byte {
 	return b
 }
 
+// RemoveSpace ...
+func RemoveSpace(b []byte) []byte {
+	return removeSpace(b)
+}
+
 func removeSpace(b []byte) []byte {
 	return bytes.Map(func(r rune) rune {
 		if unicode.IsSpace(r) {
@@ -218,6 +228,11 @@ func removeSpace(b []byte) []byte {
 		}
 		return r
 	}, b)
+}
+
+// RemoveShadda ...
+func RemoveShadda(b []byte) []byte {
+	return removeShadda(b)
 }
 
 func removeShadda(b []byte) []byte {
@@ -229,6 +244,10 @@ func removeShadda(b []byte) []byte {
 	}, b)
 }
 
+// JoinConsonant ...
+func JoinConsonant(b []byte) []byte {
+	return joinConsonant(b)
+}
 func joinConsonant(b []byte) []byte {
 	buf := make([]byte, len(b))
 	runes := bytes.Runes(b)
@@ -261,6 +280,11 @@ func joinConsonant(b []byte) []byte {
 	return buf[:n]
 }
 
+// FixBoundary ...
+func FixBoundary(b []byte) []byte {
+	return fixBoundary(b)
+}
+
 func fixBoundary(b []byte) []byte {
 	runes := bytes.Runes(b)
 	l := len(runes)
@@ -289,8 +313,8 @@ func fixBoundary(b []byte) []byte {
 
 	r = runes[0]
 	if r == Alef {
-		runes[0] = Fatha
-		runes = append([]rune{AlefHamzaA}, runes...)
+		// runes[0] = Fatha
+		runes = append([]rune{AlefHamzaA, Fatha}, runes...)
 	}
 
 	// buf large enough to encode rune
@@ -303,6 +327,10 @@ func fixBoundary(b []byte) []byte {
 	return buf[:n]
 }
 
+// TanwinSub ...
+func TanwinSub(b []byte) []byte {
+	return tanwinSub(b)
+}
 func tanwinSub(b []byte) []byte {
 	old := []byte(string(Fathatan))
 	r := []rune{Fatha, Noon, Sukun}
@@ -334,6 +362,10 @@ func isVowel(r rune) bool {
 	return isHarakat(r) || isTanwin(r) || r == Shadda || r == Sukun
 }
 
+// RemoveMadda ...
+func RemoveMadda(b []byte) []byte {
+	return removeMadda(b)
+}
 func removeMadda(b []byte) []byte {
 	buf := make([]byte, len(b))
 	runes := bytes.Runes(b)
@@ -353,9 +385,9 @@ func removeMadda(b []byte) []byte {
 		}
 
 		if next2 != utf8.RuneError &&
-			((curr == Fatha && next1 == Alef && !isHarakat(next2)) ||
-				(curr == Kasra && next1 == Yeh && !isHarakat(next2)) ||
-				(curr == Damma && next1 == Waw && !isHarakat(next2))) {
+			((curr == Fatha && next1 == Alef && !isHarakat(next2) && next2 != Shadda) ||
+				(curr == Kasra && next1 == Yeh && !isHarakat(next2) && next2 != Shadda) ||
+				(curr == Damma && next1 == Waw && !isHarakat(next2) && next2 != Shadda)) {
 			n += utf8.EncodeRune(buf[n:], curr)
 			n += utf8.EncodeRune(buf[n:], next2)
 			i += 2
@@ -370,6 +402,11 @@ func removeMadda(b []byte) []byte {
 	buf = bytes.Replace(buf[:n], old, new, -1)
 
 	return buf[:n]
+}
+
+// RemoveUnreadConsonant ...
+func RemoveUnreadConsonant(b []byte) []byte {
+	return removeUnreadConsonant(b)
 }
 
 func removeUnreadConsonant(b []byte) []byte {
@@ -409,6 +446,11 @@ func rmvUnreadCons(b []byte) []byte {
 	return buf[:n]
 }
 
+// IqlabSub ...
+func IqlabSub(b []byte) []byte {
+	return iqlabSub(b)
+}
+
 func iqlabSub(b []byte) []byte {
 	old := []byte(string([]rune{Noon, Sukun, Beh}))
 	new := []byte(string([]rune{Meem, Sukun, Beh}))
@@ -419,6 +461,11 @@ func iqlabSub(b []byte) []byte {
 	b = bytes.Replace(b, old, new, -1)
 
 	return b
+}
+
+// IdghamSub ...
+func IdghamSub(b []byte) []byte {
+	return idghamSub(b)
 }
 
 func idghamSub(b []byte) []byte {
@@ -524,6 +571,11 @@ func exceptionIdgham(b []byte) []byte {
 	b = bytes.Replace(b, old, new, -1)
 
 	return b
+}
+
+// RemoveHarakat ...
+func RemoveHarakat(b []byte) []byte {
+	return removeHarakat(b)
 }
 
 func removeHarakat(b []byte) []byte {

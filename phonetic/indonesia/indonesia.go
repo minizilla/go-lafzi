@@ -34,12 +34,12 @@ func (enc *Encoder) Encode(src []byte) []byte {
 func praprocess(b []byte) []byte {
 	// uppercase
 	b = bytes.ToUpper(b)
+	// change hyphen (-) into space
+	b = bytes.Replace(b, []byte("-"), []byte(" "), -1)
 	// single space
 	b = regexp.MustCompile("\\s+").
 		ReplaceAll(bytes.TrimSpace(b), []byte(" "))
-	// change (-) to space
-	b = bytes.Replace(b, []byte("-"), []byte(" "), -1)
-	// remove all character except alphabet & ` & ' & space
+	// remove all character except alphabet, grave (`), apostrophe ('), and space
 	b = regexp.MustCompile("[^A-Z`'\\s]").
 		ReplaceAll(b, []byte(""))
 
