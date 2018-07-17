@@ -186,12 +186,14 @@ func (idx *Index) Search(query []byte) (string, []document.Document) {
 			return docs[i].Score <= (filterThreshold * n)
 		})
 		if min > 0 {
-			fmt.Println(min, filterThreshold, filterThreshold*n)
+			fmt.Printf("total filtered document: %d document\n", min)
+			fmt.Printf("filter threshold: %.2f\n", filterThreshold)
+			fmt.Printf("score minimum: %.2f\n\n", filterThreshold*n)
 			break
 		}
 	}
 
 	// [5] search result
-	// return string(queryPhonetic[:]), docs[:min]
-	return string(queryPhonetic[:]), docs[:3]
+	return string(queryPhonetic[:]), docs[:min]
+	// return string(queryPhonetic[:]), docs[:3]
 }
