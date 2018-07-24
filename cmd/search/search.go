@@ -47,13 +47,19 @@ func main() {
 	}
 
 	idx.ParseTermlist()
-	phoneticCode, docs := idx.Search([]byte(*q))
-	fmt.Printf("query:\t%s\n", *q)
-	fmt.Printf("phonetic code:\t%s\n\n", phoneticCode)
+	docs, meta := idx.Search([]byte(*q))
+	fmt.Printf("Query\t\t\t: %s\n", meta.Query)
+	fmt.Printf("Phonetic code\t\t: %s\n", meta.PhoneticCode)
+	fmt.Printf("Trigram count\t\t: %d\n", meta.TrigramCount)
+	fmt.Printf("Document found\t\t: %d\n", meta.FoundDoc)
+	fmt.Printf("Filter threshold\t: %.2f\n", meta.FilterThreshold)
+	fmt.Printf("Score minimum\t\t: %.2f\n\n", meta.MinScore)
+
 	for i, doc := range docs {
-		fmt.Printf("rank: %d, id: %d,\tscore: %f\n", i+1, doc.ID, doc.Score)
-		fmt.Printf("matched terms: %v\n", doc.MatchedTerms)
-		fmt.Printf("LIS: %v\n\n", doc.LIS)
+		fmt.Printf("%d.\tID: %d\n", i+1, doc.ID)
+		fmt.Printf("\tScore: %.2f\n", doc.Score)
+		fmt.Printf("\tMatched terms: %v\n", doc.MatchedTerms)
+		fmt.Printf("\tLIS: %v\n\n", doc.LIS)
 	}
 
 	timeEnd := time.Now()
