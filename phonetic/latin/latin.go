@@ -3,26 +3,36 @@ package latin
 import (
 	"bufio"
 	"bytes"
+	"fmt"
 	"io"
 	"regexp"
+	"strings"
 	"unicode/utf8"
 
+	ar "github.com/billyzaelani/go-lafzi/phonetic/arabic"
 	"github.com/dlclark/regexp2"
 )
+
+type regex struct {
+	pattern, replace string
+}
 
 // Encoder implements auto encoding from latin writing system to
 // phonetic. Encoding with vowel might resulting unexpected behavior
 // (future work).
 type Encoder struct {
-	letters map[rune]string
+	letters                                        map[rune]string
+	regDoubleC, regIkhfa, regIqlab, regIdgham      regex
+	regZ, regH, regX, regS, regD, regT, regK, regG regex
+	regF, regM, regN, regL, regB, regY, regW, regR regex
 }
 
 // Parse ...
-func (enc *Encoder) Parse(r io.ReadCloser) {
+func (enc *Encoder) Parse(rc io.ReadCloser) {
 	if enc.letters == nil {
 		enc.letters = make(map[rune]string)
 	}
-	sc := bufio.NewScanner(r)
+	sc := bufio.NewScanner(rc)
 	for sc.Scan() {
 		// split delim "|"
 		// [0] arabic letters
@@ -32,24 +42,245 @@ func (enc *Encoder) Parse(r io.ReadCloser) {
 		l := string(data[1])
 		enc.letters[r] = l
 	}
-	r.Close()
+	rc.Close()
+
+	enc.regZ, enc.regH, enc.regX, enc.regS = regZ(enc.letters), regH(enc.letters), regX(enc.letters), regS(enc.letters)
+	enc.regD, enc.regT, enc.regK, enc.regG = regD(enc.letters), regT(enc.letters), regK(enc.letters), regG(enc.letters)
+	enc.regF, enc.regM, enc.regN, enc.regL = regF(enc.letters), regM(enc.letters), regN(enc.letters), regL(enc.letters)
+	enc.regB, enc.regY, enc.regW, enc.regR = regB(enc.letters), regY(enc.letters), regW(enc.letters), regR(enc.letters)
+
+	enc.regDoubleC = regDoubleC(enc.letters)
+	enc.regIkhfa = regIkhfa(enc.letters)
+	enc.regIqlab = regIqlab(enc.letters)
+	enc.regIdgham = regIdgham(enc.letters)
+}
+
+type empty struct{}
+
+func regZ(letters map[rune]string) regex {
+	var pattern strings.Builder
+	phonetics := make([]string, 0, 4)
+	if letters[ar.Thal] != "Z" {
+		phonetics = append(phonetics, letters[ar.Thal])
+	}
+	if letters[ar.Zah] != "Z" {
+		phonetics = append(phonetics, letters[ar.Zah])
+	}
+	if letters[ar.Zain] != "Z" {
+		phonetics = append(phonetics, letters[ar.Zain])
+	}
+	if letters[ar.Jeem] != "Z" {
+		phonetics = append(phonetics, letters[ar.Jeem])
+	}
+
+	fmt.Fprint(&pattern, strings.Join(phonetics, "|"))
+
+	return regex{pattern.String(), "Z"}
+}
+
+func regH(letters map[rune]string) regex {
+	var pattern strings.Builder
+	phonetics := make([]string, 0, 3)
+	if letters[ar.Heh] != "H" {
+		phonetics = append(phonetics, letters[ar.Heh])
+	}
+	if letters[ar.Khah] != "H" {
+		phonetics = append(phonetics, letters[ar.Khah])
+	}
+	if letters[ar.Hah] != "H" {
+		phonetics = append(phonetics, letters[ar.Hah])
+	}
+
+	fmt.Fprint(&pattern, strings.Join(phonetics, "|"))
+
+	return regex{pattern.String(), "H"}
+}
+
+func regX(letters map[rune]string) regex {
+	return regex{"'|`", "X"}
+}
+
+func regS(letters map[rune]string) regex {
+	var pattern strings.Builder
+	phonetics := make([]string, 0, 4)
+	if letters[ar.Theh] != "S" {
+		phonetics = append(phonetics, letters[ar.Theh])
+	}
+	if letters[ar.Sheen] != "S" {
+		phonetics = append(phonetics, letters[ar.Sheen])
+	}
+	if letters[ar.Seen] != "S" {
+		phonetics = append(phonetics, letters[ar.Seen])
+	}
+	if letters[ar.Sad] != "S" {
+		phonetics = append(phonetics, letters[ar.Sad])
+	}
+
+	fmt.Fprint(&pattern, strings.Join(phonetics, "|"))
+
+	return regex{pattern.String(), "S"}
+}
+
+func regD(letters map[rune]string) regex {
+	var pattern strings.Builder
+	phonetics := make([]string, 0, 2)
+	if letters[ar.Dad] != "D" {
+		phonetics = append(phonetics, letters[ar.Dad])
+	}
+	if letters[ar.Dal] != "D" {
+		phonetics = append(phonetics, letters[ar.Dal])
+	}
+
+	fmt.Fprint(&pattern, strings.Join(phonetics, "|"))
+
+	return regex{pattern.String(), "D"}
+}
+
+func regT(letters map[rune]string) regex {
+	var pattern strings.Builder
+	phonetics := make([]string, 0, 4)
+	if letters[ar.Teh] != "T" {
+		phonetics = append(phonetics, letters[ar.Teh])
+	}
+	if letters[ar.Tah] != "T" {
+		phonetics = append(phonetics, letters[ar.Tah])
+	}
+
+	fmt.Fprint(&pattern, strings.Join(phonetics, "|"))
+
+	return regex{pattern.String(), "T"}
+}
+
+func regK(letters map[rune]string) regex {
+	var pattern strings.Builder
+	phonetics := make([]string, 0, 4)
+	if letters[ar.Qaf] != "K" {
+		phonetics = append(phonetics, letters[ar.Qaf])
+	}
+	if letters[ar.Kaf] != "K" {
+		phonetics = append(phonetics, letters[ar.Kaf])
+	}
+
+	fmt.Fprint(&pattern, strings.Join(phonetics, "|"))
+
+	return regex{pattern.String(), "K"}
+}
+
+func regG(letters map[rune]string) regex {
+	return regex{letters[ar.Ghain], "G"}
+}
+
+func regF(letters map[rune]string) regex {
+	return regex{letters[ar.Feh], "F"}
+}
+
+func regM(letters map[rune]string) regex {
+	return regex{letters[ar.Meem], "M"}
+}
+
+func regN(letters map[rune]string) regex {
+	return regex{letters[ar.Noon], "N"}
+}
+
+func regL(letters map[rune]string) regex {
+	return regex{letters[ar.Lam], "L"}
+}
+
+func regB(letters map[rune]string) regex {
+	return regex{letters[ar.Beh], "B"}
+}
+
+func regY(letters map[rune]string) regex {
+	return regex{letters[ar.Yeh], "Y"}
+}
+
+func regW(letters map[rune]string) regex {
+	return regex{letters[ar.Waw], "W"}
+}
+
+func regR(letters map[rune]string) regex {
+	return regex{letters[ar.Reh], "R"}
+}
+
+func regDoubleC(letters map[rune]string) regex {
+	var pattern strings.Builder
+	pattern.WriteString("(?<double>")
+	var i int
+	for _, l := range letters {
+		if len(l) >= 2 {
+			if i != 0 {
+				pattern.WriteString("|")
+			}
+			pattern.WriteString(l)
+			i++
+		}
+	}
+	pattern.WriteString(")\\s?\\1+")
+
+	return regex{pattern.String(), "${double}"}
+}
+
+func regIkhfa(letters map[rune]string) regex {
+	var pattern, replace strings.Builder
+
+	fmt.Fprintf(&pattern, "(?P<vowel>A|I|U)%sG\\s?(?P<ikhfa>", letters[ar.Noon])
+	fmt.Fprintf(&pattern, "%s|%s|%s|", letters[ar.Teh], letters[ar.Theh], letters[ar.Jeem])
+	fmt.Fprintf(&pattern, "%s|%s|%s|", letters[ar.Dal], letters[ar.Thal], letters[ar.Zain])
+	fmt.Fprintf(&pattern, "%s|%s|%s|", letters[ar.Seen], letters[ar.Sheen], letters[ar.Sad])
+	fmt.Fprintf(&pattern, "%s|%s|%s|", letters[ar.Dad], letters[ar.Tah], letters[ar.Zah])
+	fmt.Fprintf(&pattern, "%s|%s|%s)", letters[ar.Feh], letters[ar.Qaf], letters[ar.Kaf])
+
+	fmt.Fprintf(&replace, "${vowel}%s${ikhfa}", letters[ar.Noon])
+
+	return regex{pattern.String(), replace.String()}
+}
+
+func regIqlab(letters map[rune]string) regex {
+	var pattern, replace strings.Builder
+
+	fmt.Fprintf(&pattern, "%s\\s?%s", letters[ar.Noon], letters[ar.Beh])
+	fmt.Fprintf(&replace, "%s%s", letters[ar.Meem], letters[ar.Beh])
+
+	return regex{pattern.String(), replace.String()}
+}
+
+func regIdgham(letters map[rune]string) regex {
+	var pattern strings.Builder
+
+	fmt.Fprintf(&pattern, "%s\\s?(?P<idgham>", letters[ar.Noon])
+	fmt.Fprintf(&pattern, "%s|%s|%s|", letters[ar.Noon], letters[ar.Meem], letters[ar.Lam])
+	fmt.Fprintf(&pattern, "%s|%s|%s)", letters[ar.Reh], letters[ar.Yeh], letters[ar.Waw])
+
+	return regex{pattern.String(), "${idgham}"}
 }
 
 // Encode returns encoded of src using encoding enc.
 func (enc *Encoder) Encode(src []byte) []byte {
 	b := praprocess(src)
+	// fmt.Println("praprocess:", string(b))
 	b = vowelSub(b)
+	// fmt.Println("vowelSub:", string(b))
 	b = enc.joinConsonant(b)
+	// fmt.Println("joinConsonant:", string(b))
 	b = joinVowel(b)
+	// fmt.Println("joinVowel:", string(b))
 	b = diphthongSub(b)
+	// fmt.Println("diphthongSub:", string(b))
 	b = markHamzah(b)
-	b = ikhfaSub(b)
-	b = iqlabSub(b)
-	b = idghamSub(b)
-	// b = encode1consonant(b)
-	// b = encode2consonant(b)
+	// fmt.Println("markHamzah:", string(b))
+	b = enc.ikhfaSub(b)
+	// fmt.Println("ikhfaSub:", string(b))
+	b = enc.iqlabSub(b)
+	// fmt.Println("iqlabSub:", string(b))
+	b = enc.idghamSub(b)
+	// fmt.Println("idghamSub:", string(b))
+	b = enc.encode(b)
+	// fmt.Println("encode:", string(b))
 	b = removeSpace(b)
+	// fmt.Println("removeSpace:", string(b))
 	b = removeVowel(b)
+	// fmt.Println("removeVowel:", string(b))
+	// fmt.Println()
 
 	return b
 }
@@ -69,6 +300,7 @@ func praprocess(b []byte) []byte {
 	return b
 }
 
+// any algorithm that use vowel may misbehave for auto generated phonetic.
 func vowelSub(b []byte) []byte {
 	return bytes.Map(func(r rune) rune {
 		switch r {
@@ -87,27 +319,14 @@ func (enc Encoder) joinConsonant(b []byte) []byte {
 	// single consonant
 	str, _ = regexp2.MustCompile("(?<single>B|C|D|F|G|H|J|K|L|M|N|P|Q|R|S|T|V|W|X|Y|Z)\\s?\\1+", 0).
 		Replace(str, "${single}", -1, -1)
-
-	var buf bytes.Buffer
-	buf.WriteString("(?<double>")
-	var i int
-	for _, l := range enc.letters {
-		if len(l) >= 2 {
-			if i != 0 {
-				buf.WriteString("|")
-			}
-			buf.WriteString(l)
-			i++
-		}
-	}
-	buf.WriteString(")\\s?\\1+")
 	// double consonant
-	str, _ = regexp2.MustCompile(buf.String(), 0).
-		Replace(str, "${double}", -1, -1)
+	str, _ = regexp2.MustCompile(enc.regDoubleC.pattern, 0).
+		Replace(str, enc.regDoubleC.replace, -1, -1)
 
 	return []byte(str)
 }
 
+// any algorithm that use vowel may misbehave for auto generated phonetic.
 func joinVowel(b []byte) []byte {
 	str := string(b)
 	// single vocal
@@ -117,6 +336,7 @@ func joinVowel(b []byte) []byte {
 	return []byte(str)
 }
 
+// any algorithm that use vowel may misbehave for auto generated phonetic.
 func diphthongSub(b []byte) []byte {
 	b = regexp.MustCompile("AI").
 		ReplaceAll(b, []byte("AY"))
@@ -126,12 +346,13 @@ func diphthongSub(b []byte) []byte {
 	return b
 }
 
+// any algorithm that use vowel may misbehave for auto generated phonetic.
 func markHamzah(b []byte) []byte {
 	// beginning of the string
-	b = regexp.MustCompile("^(?P<hamzah>A|I|U|E|O)").
+	b = regexp.MustCompile("^(?P<hamzah>A|I|U)").
 		ReplaceAll(b, []byte("X${hamzah}"))
 	// after space
-	b = regexp.MustCompile("\\s(?P<hamzah>A|I|U|E|O)").
+	b = regexp.MustCompile("\\s(?P<hamzah>A|I|U)").
 		ReplaceAll(b, []byte(" X${hamzah}"))
 	// IA, IU => IXA, IXU
 	b = regexp.MustCompile("I(?P<hamzah>A|U)").
@@ -143,21 +364,21 @@ func markHamzah(b []byte) []byte {
 	return b
 }
 
-// TODO: need automatic detection through transliteration.
-func ikhfaSub(b []byte) []byte {
+// any algorithm that use vowel may misbehave for auto generated phonetic.
+func (enc Encoder) ikhfaSub(b []byte) []byte {
 	// [vowel][NG][ikhfa] => [vowel][N][ikhfa]
-	return regexp.MustCompile("(?P<vowel>A|I|U|E|O)NG\\s?(?P<ikhfa>D|F|J|K|P|Q|S|T|V|Z)").
-		ReplaceAll(b, []byte("${vowel}N${ikhfa}"))
+	return regexp.MustCompile(enc.regIkhfa.pattern).
+		ReplaceAll(b, []byte(enc.regIkhfa.replace))
 }
 
 // // TODO: need automatic detection through transliteration.
-func iqlabSub(b []byte) []byte {
+func (enc Encoder) iqlabSub(b []byte) []byte {
 	// NB => MB
-	return regexp.MustCompile("N\\s?B").
-		ReplaceAll(b, []byte("MB"))
+	return regexp.MustCompile(enc.regIqlab.pattern).
+		ReplaceAll(b, []byte(enc.regIqlab.replace))
 }
 
-func idghamSub(b []byte) []byte {
+func (enc Encoder) idghamSub(b []byte) []byte {
 	// exception
 	b = bytes.Replace(b, []byte("DUNYA"), []byte("DUN_YA"), -1)
 	b = bytes.Replace(b, []byte("BUNYAN"), []byte("BUN_YAN"), -1)
@@ -165,48 +386,39 @@ func idghamSub(b []byte) []byte {
 	b = bytes.Replace(b, []byte("KINWAN"), []byte("KIN_WAN"), -1)
 	b = bytes.Replace(b, []byte("SINWAN"), []byte("SIN_WAN"), -1)
 	b = bytes.Replace(b, []byte("SHINWAN"), []byte("SIN_WAN"), -1)
+	b = bytes.Replace(b, []byte("NUNWALQALAM"), []byte("NUN_WALQALAM"), -1)
 
 	// N,M,L,R,Y,W
-	b = regexp.MustCompile("N\\s?(?P<idgham>N|M|L|R|Y|W)").
-		ReplaceAll(b, []byte("${idgham}"))
+	b = regexp.MustCompile(enc.regIdgham.pattern).
+		ReplaceAll(b, []byte(enc.regIdgham.replace))
 
 	// reverse the exception
 	b = bytes.Replace(b, []byte("DUN_YA"), []byte("DUNYA"), -1)
 	b = bytes.Replace(b, []byte("BUN_YAN"), []byte("BUNYAN"), -1)
 	b = bytes.Replace(b, []byte("KIN_WAN"), []byte("KINWAN"), -1)
 	b = bytes.Replace(b, []byte("SIN_WAN"), []byte("SINWAN"), -1)
+	b = bytes.Replace(b, []byte("NUN_WALQALAM"), []byte("NUNWALQALAM"), -1)
 
 	return b
 }
 
-func encode2consonant(b []byte) []byte {
-	b = regexp.MustCompile("KH|CH").
-		ReplaceAll(b, []byte("H"))
-	b = regexp.MustCompile("SH|TS|SY").
-		ReplaceAll(b, []byte("S"))
-	b = regexp.MustCompile("DH").
-		ReplaceAll(b, []byte("D"))
-	b = regexp.MustCompile("ZH|DZ").
-		ReplaceAll(b, []byte("Z"))
-	b = regexp.MustCompile("TH").
-		ReplaceAll(b, []byte("T"))
-	b = regexp.MustCompile("NG(?P<sub>A|I|U)").
-		ReplaceAll(b, []byte("X${sub}"))
-	b = regexp.MustCompile("GH").
-		ReplaceAll(b, []byte("G"))
-
-	return b
-}
-
-func encode1consonant(b []byte) []byte {
-	b = regexp.MustCompile("'|`").
-		ReplaceAll(b, []byte("X"))
-	b = regexp.MustCompile("Q|K").
-		ReplaceAll(b, []byte("K"))
-	b = regexp.MustCompile("F|V|P").
-		ReplaceAll(b, []byte("F"))
-	b = regexp.MustCompile("J|Z").
-		ReplaceAll(b, []byte("Z"))
+func (enc Encoder) encode(b []byte) []byte {
+	b = regexp.MustCompile(enc.regZ.pattern).ReplaceAll(b, []byte(enc.regZ.replace))
+	b = regexp.MustCompile(enc.regH.pattern).ReplaceAll(b, []byte(enc.regH.replace))
+	b = regexp.MustCompile(enc.regX.pattern).ReplaceAll(b, []byte(enc.regX.replace))
+	b = regexp.MustCompile(enc.regS.pattern).ReplaceAll(b, []byte(enc.regS.replace))
+	b = regexp.MustCompile(enc.regD.pattern).ReplaceAll(b, []byte(enc.regD.replace))
+	b = regexp.MustCompile(enc.regT.pattern).ReplaceAll(b, []byte(enc.regT.replace))
+	b = regexp.MustCompile(enc.regK.pattern).ReplaceAll(b, []byte(enc.regK.replace))
+	b = regexp.MustCompile(enc.regG.pattern).ReplaceAll(b, []byte(enc.regG.replace))
+	b = regexp.MustCompile(enc.regF.pattern).ReplaceAll(b, []byte(enc.regF.replace))
+	b = regexp.MustCompile(enc.regM.pattern).ReplaceAll(b, []byte(enc.regM.replace))
+	b = regexp.MustCompile(enc.regN.pattern).ReplaceAll(b, []byte(enc.regN.replace))
+	b = regexp.MustCompile(enc.regL.pattern).ReplaceAll(b, []byte(enc.regL.replace))
+	b = regexp.MustCompile(enc.regB.pattern).ReplaceAll(b, []byte(enc.regB.replace))
+	b = regexp.MustCompile(enc.regY.pattern).ReplaceAll(b, []byte(enc.regY.replace))
+	b = regexp.MustCompile(enc.regW.pattern).ReplaceAll(b, []byte(enc.regW.replace))
+	b = regexp.MustCompile(enc.regR.pattern).ReplaceAll(b, []byte(enc.regR.replace))
 
 	return b
 }
