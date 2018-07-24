@@ -2,29 +2,31 @@ package index
 
 import (
 	"bufio"
-	"fmt"
 	"io"
 	"sort"
 	"strconv"
 	"strings"
 
-	"github.com/billyzaelani/go-lafzi/sequence"
-
-	"github.com/billyzaelani/go-lafzi/phonetic"
-	"github.com/billyzaelani/go-lafzi/trigram"
-
 	"github.com/billyzaelani/go-lafzi/document"
+	"github.com/billyzaelani/go-lafzi/phonetic"
+	"github.com/billyzaelani/go-lafzi/sequence"
+	"github.com/billyzaelani/go-lafzi/trigram"
 )
 
-// seek reads r form offset to n.
-func seek(r io.ReaderAt, offset int64, n int64) ([]byte, error) {
-	section := io.NewSectionReader(r, offset, n)
-	p := make([]byte, n)
-	_, err := section.Read(p)
-	if err != io.EOF {
-		return p, err
+var maxSectionLength int64 = 255
+
+// seek reads r form offset to sectionLength.
+func seek(r io.ReaderAt, offset int64, sectionLength int64) ([]byte, error) {
+	if sectionLength == -1 {
+		sectionLength = maxSectionLength
 	}
-	return p, nil
+	section := io.NewSectionReader(r, offset, sectionLength)
+	p := make([]byte, sectionLength)
+	n, err := section.Read(p)
+	if err != io.EOF {
+		return p[:n], err
+	}
+	return p[:n], nil
 }
 
 type line struct {
@@ -50,7 +52,7 @@ func NewIndex(enc phonetic.Encoder,
 		terms:           make(map[trigram.Token]line),
 		encoder:         enc,
 		scoreOrder:      true,
-		filterThreshold: []float64{0.95, 0.8, 0.7},
+		filterThreshold: []float64{0.75, 0.65, 0.55},
 	}
 }
 
@@ -88,7 +90,7 @@ func (idx *Index) SetPhoneticEncoder(enc phonetic.Encoder) {
 }
 
 // Search searches matched Document from query.
-func (idx *Index) Search(query []byte) (string, []document.Document) {
+func (idx *Index) Search(query []byte) ([]document.Document, Meta) {
 	// query -> phonetic encoding -> trigram tokenization
 	// -> matched trigram -> document rangking
 	// -> search result (documents)
@@ -99,7 +101,7 @@ func (idx *Index) Search(query []byte) (string, []document.Document) {
 	// [2] trigram tokenization
 	queryTrigram := trigram.TokenPositions(queryPhonetic)
 	if len(queryTrigram) <= 0 {
-		return string(queryPhonetic[:]), []document.Document{}
+		return []document.Document{}, Meta{Query: string(query), PhoneticCode: string(queryPhonetic)}
 	}
 
 	var matchedPostlist []string
@@ -178,22 +180,30 @@ func (idx *Index) Search(query []byte) (string, []document.Document) {
 		i++
 	}
 	// sort based on score, higher on index 0
-	min := 0
+	foundDoc := 0
+	filterThreshold, minScore := 0.0, 0.0
 	sort.Sort(docs)
 	n := float64(len(queryTrigram))
-	for _, filterThreshold := range idx.filterThreshold {
-		min = sort.Search(len(docs), func(i int) bool {
-			return docs[i].Score <= (filterThreshold * n)
+	for _, threshold := range idx.filterThreshold {
+		foundDoc = sort.Search(len(docs), func(i int) bool {
+			return docs[i].Score <= (threshold * n)
 		})
-		if min > 0 {
-			fmt.Printf("total filtered document: %d document\n", min)
-			fmt.Printf("filter threshold: %.2f\n", filterThreshold)
-			fmt.Printf("score minimum: %.2f\n\n", filterThreshold*n)
+		if foundDoc > 0 {
+			filterThreshold = threshold
 			break
 		}
 	}
+	minScore = filterThreshold * n
 
 	// [5] search result
-	return string(queryPhonetic[:]), docs[:min]
-	// return string(queryPhonetic[:]), docs[:3]
+	return docs[:foundDoc], Meta{string(query), string(queryPhonetic),
+		int(n), foundDoc, filterThreshold, minScore}
+}
+
+// Meta ...
+type Meta struct {
+	Query                     string
+	PhoneticCode              string
+	TrigramCount, FoundDoc    int
+	FilterThreshold, MinScore float64
 }
