@@ -14,10 +14,16 @@ import (
 // phonetic. Encoding with vowel might resulting unexpected behavior
 // (future work).
 type Encoder struct {
+	vowel                                          bool
 	letters                                        map[rune]string
 	regDoubleC, regIkhfa, regIqlab, regIdgham      regex
 	regZ, regH, regX, regS, regD, regT, regK, regG regex
 	regF, regM, regN, regL, regB, regY, regW, regR regex
+}
+
+// SetVowel ...
+func (enc *Encoder) SetVowel(vowel bool) {
+	enc.vowel = vowel
 }
 
 // Parse ...
@@ -51,30 +57,19 @@ func (enc *Encoder) Parse(rc io.ReadCloser) {
 // Encode returns encoded of src using encoding enc.
 func (enc *Encoder) Encode(src []byte) []byte {
 	b := praprocess(src)
-	// fmt.Println("praprocess:", string(b))
 	b = vowelSub(b)
-	// fmt.Println("vowelSub:", string(b))
 	b = enc.joinConsonant(b)
-	// fmt.Println("joinConsonant:", string(b))
 	b = joinVowel(b)
-	// fmt.Println("joinVowel:", string(b))
 	b = diphthongSub(b)
-	// fmt.Println("diphthongSub:", string(b))
 	b = markHamzah(b)
-	// fmt.Println("markHamzah:", string(b))
 	b = enc.ikhfaSub(b)
-	// fmt.Println("ikhfaSub:", string(b))
 	b = enc.iqlabSub(b)
-	// fmt.Println("iqlabSub:", string(b))
 	b = enc.idghamSub(b)
-	// fmt.Println("idghamSub:", string(b))
 	b = enc.encode(b)
-	// fmt.Println("encode:", string(b))
 	b = removeSpace(b)
-	// fmt.Println("removeSpace:", string(b))
-	b = removeVowel(b)
-	// fmt.Println("removeVowel:", string(b))
-	// fmt.Println()
+	if !enc.vowel {
+		b = removeVowel(b)
+	}
 
 	return b
 }
