@@ -10,7 +10,14 @@ import (
 )
 
 // Encoder implements indonesia-phonetic encoding.
-type Encoder struct{}
+type Encoder struct {
+	vowel bool
+}
+
+// SetVowel ...
+func (enc *Encoder) SetVowel(vowel bool) {
+	enc.vowel = vowel
+}
 
 // Encode returns encoded of src using encoding enc.
 func (enc *Encoder) Encode(src []byte) []byte {
@@ -26,7 +33,9 @@ func (enc *Encoder) Encode(src []byte) []byte {
 	b = encode1consonant(b)
 	b = encode2consonant(b)
 	b = removeSpace(b)
-	b = removeVowel(b)
+	if !enc.vowel {
+		b = removeVowel(b)
+	}
 
 	return b
 }
