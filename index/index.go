@@ -37,10 +37,12 @@ type line struct {
 type Index struct {
 	postlist             io.ReaderAt
 	scoreOrder, filtered bool
-	filterThreshold      []float64
+	filterThreshold      float64
 	terms                map[trigram.Token]line
 	encoder              phonetic.Encoder
 }
+
+var defaultFilterThreshold = 0.5
 
 // NewIndex ...
 func NewIndex(enc phonetic.Encoder, postlist io.ReaderAt) *Index {
@@ -50,19 +52,17 @@ func NewIndex(enc phonetic.Encoder, postlist io.ReaderAt) *Index {
 		encoder:    enc,
 		scoreOrder: true,
 		// default threshold
-		filterThreshold: []float64{0.75, 0.65, 0.55},
+		filterThreshold: defaultFilterThreshold,
 	}
 }
 
-// SetFilterThreshold sets filter threshold in form of slice with decreasing element.
-// Threshold are set using index 0 of slice and remaining index are used for fallback threshold.
-// If threshold nil filter threshold use previous threshold. Default if not set
-// are []float64{0.75, 0.65, 0.55}.
-func (idx *Index) SetFilterThreshold(threshold []float64) {
-	if threshold == nil {
-		return
+// SetFilterThreshold sets filter threshold, threshold range between 0 and 1.
+// Default threshold is 0.5 if threshold are not set or set outside range.
+func (idx *Index) SetFilterThreshold(filterThreshold float64) {
+	if filterThreshold < 0 || filterThreshold > 1 {
+		idx.filterThreshold = defaultFilterThreshold
 	}
-	idx.filterThreshold = threshold
+	idx.filterThreshold = filterThreshold
 }
 
 // SetScoreOrder sets score order which if true score calculation will consider position
@@ -200,24 +200,17 @@ func (idx *Index) Search(query []byte) ([]document.Document, Meta) {
 		i++
 	}
 	// sort based on score, higher on index 0
-	foundDoc := 0
-	filterThreshold, minScore := 0.0, 0.0
 	sort.Sort(docs)
+	// filter document
 	n := float64(len(queryTrigram))
-	for _, threshold := range idx.filterThreshold {
-		foundDoc = sort.Search(len(docs), func(i int) bool {
-			return docs[i].Score <= (threshold * n)
-		})
-		if foundDoc > 0 {
-			filterThreshold = threshold
-			break
-		}
-	}
-	minScore = filterThreshold * n
+	foundDoc := sort.Search(len(docs), func(i int) bool {
+		return docs[i].Score <= (idx.filterThreshold * n)
+	})
+	minScore := idx.filterThreshold * n
 
 	// [5] search result
 	return docs[:foundDoc], Meta{string(query), string(queryPhonetic),
-		int(n), foundDoc, filterThreshold, minScore}
+		int(n), foundDoc, idx.filterThreshold, minScore}
 }
 
 // Meta ...
