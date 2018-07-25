@@ -14,11 +14,11 @@ import (
 // phonetic. Encoding with vowel might resulting unexpected behavior
 // (future work).
 type Encoder struct {
-	vowel                                          bool
-	letters                                        map[rune]string
-	regDoubleC, regIkhfa, regIqlab, regIdgham      regex
-	regZ, regH, regX, regS, regD, regT, regK, regG regex
-	regF, regM, regN, regL, regB, regY, regW, regR regex
+	vowel                                                      bool
+	letters                                                    map[rune]string
+	regDoubleC, regJoinAleefLam, regIkhfa, regIqlab, regIdgham regex
+	regZ, regH, regX, regS, regD, regT, regK, regG             regex
+	regF, regM, regN, regL, regB, regY, regW, regR             regex
 }
 
 // SetVowel ...
@@ -27,11 +27,11 @@ func (enc *Encoder) SetVowel(vowel bool) {
 }
 
 // Parse ...
-func (enc *Encoder) Parse(rc io.ReadCloser) {
+func (enc *Encoder) Parse(lettersMapping io.Reader) {
 	if enc.letters == nil {
 		enc.letters = make(map[rune]string)
 	}
-	sc := bufio.NewScanner(rc)
+	sc := bufio.NewScanner(lettersMapping)
 	for sc.Scan() {
 		// split delim "|"
 		// [0] arabic letters
@@ -41,7 +41,6 @@ func (enc *Encoder) Parse(rc io.ReadCloser) {
 		l := string(data[1])
 		enc.letters[r] = l
 	}
-	rc.Close()
 
 	enc.regZ, enc.regH, enc.regX, enc.regS = regZ(enc.letters), regH(enc.letters), regX(enc.letters), regS(enc.letters)
 	enc.regD, enc.regT, enc.regK, enc.regG = regD(enc.letters), regT(enc.letters), regK(enc.letters), regG(enc.letters)
@@ -49,6 +48,7 @@ func (enc *Encoder) Parse(rc io.ReadCloser) {
 	enc.regB, enc.regY, enc.regW, enc.regR = regB(enc.letters), regY(enc.letters), regW(enc.letters), regR(enc.letters)
 
 	enc.regDoubleC = regDoubleC(enc.letters)
+	enc.regJoinAleefLam = regJoinAleefLam(enc.letters)
 	enc.regIkhfa = regIkhfa(enc.letters)
 	enc.regIqlab = regIqlab(enc.letters)
 	enc.regIdgham = regIdgham(enc.letters)
@@ -61,6 +61,7 @@ func (enc *Encoder) Encode(src []byte) []byte {
 	b = enc.joinConsonant(b)
 	b = joinVowel(b)
 	b = diphthongSub(b)
+	b = enc.joinAleefLam(b)
 	b = markHamzah(b)
 	b = enc.ikhfaSub(b)
 	b = enc.iqlabSub(b)
@@ -133,6 +134,14 @@ func diphthongSub(b []byte) []byte {
 		ReplaceAll(b, []byte("AW"))
 
 	return b
+}
+
+func (enc Encoder) joinAleefLam(b []byte) []byte {
+	str := string(b)
+	str, _ = regexp2.MustCompile(enc.regJoinAleefLam.pattern, 0).
+		Replace(str, enc.regJoinAleefLam.replace, -1, -1)
+
+	return []byte(str)
 }
 
 // any algorithm that use vowel may misbehave for auto generated phonetic.

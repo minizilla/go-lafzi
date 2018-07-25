@@ -174,6 +174,15 @@ func regDoubleC(letters map[rune]string) regex {
 	return regex{pattern.String(), "${double}"}
 }
 
+func regJoinAleefLam(letters map[rune]string) regex {
+	var pattern, replace strings.Builder
+
+	fmt.Fprintf(&pattern, "(?<vowel>A|I|U)+\\s(A|I|U)+%s", letters[ar.Lam])
+	fmt.Fprintf(&replace, "${vowel}%s", letters[ar.Lam])
+
+	return regex{pattern.String(), replace.String()}
+}
+
 func regIkhfa(letters map[rune]string) regex {
 	var pattern, replace strings.Builder
 
