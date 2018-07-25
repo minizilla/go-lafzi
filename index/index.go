@@ -33,16 +33,9 @@ type line struct {
 	offset, n int64
 }
 
-// ReaderAtCloser ...
-type ReaderAtCloser interface {
-	io.ReaderAt
-	io.Closer
-}
-
 // Index ...
 type Index struct {
-	termlist             io.ReadCloser
-	postlist             ReaderAtCloser
+	postlist             io.ReaderAt
 	scoreOrder, filtered bool
 	filterThreshold      []float64
 	terms                map[trigram.Token]line
@@ -50,10 +43,8 @@ type Index struct {
 }
 
 // NewIndex ...
-func NewIndex(enc phonetic.Encoder,
-	termlist io.ReadCloser, postlist ReaderAtCloser) *Index {
+func NewIndex(enc phonetic.Encoder, postlist io.ReaderAt) *Index {
 	return &Index{
-		termlist:   termlist,
 		postlist:   postlist,
 		terms:      make(map[trigram.Token]line),
 		encoder:    enc,
@@ -82,9 +73,9 @@ func (idx *Index) SetScoreOrder(scoreOrder bool) {
 }
 
 // ParseTermlist ...
-func (idx *Index) ParseTermlist() error {
-	// scan termlist, place it to memory and then close
-	sc := bufio.NewScanner(idx.termlist)
+func (idx *Index) ParseTermlist(termlist io.Reader) {
+	// scan termlist, place it to memory
+	sc := bufio.NewScanner(termlist)
 	var prevToken trigram.Token
 	var prevOffset int64
 
@@ -92,10 +83,7 @@ func (idx *Index) ParseTermlist() error {
 		str := strings.Split(sc.Text(), "|")
 		token := trigram.Token(str[0])
 		// convert guaranted to be success
-		i, err := strconv.Atoi(str[1])
-		if err != nil {
-			return err
-		}
+		i, _ := strconv.Atoi(str[1])
 		offset := int64(i)
 		if prevToken != "" {
 			n := (offset - prevOffset) - 1
@@ -106,12 +94,11 @@ func (idx *Index) ParseTermlist() error {
 	}
 	// last line
 	idx.terms[prevToken] = line{prevOffset, -1}
-	return idx.termlist.Close()
 }
 
-// Close ...
-func (idx *Index) Close() error {
-	return idx.postlist.Close()
+// SetPostlist ...
+func (idx *Index) SetPostlist(postlist io.ReaderAt) {
+	idx.postlist = postlist
 }
 
 // SetPhoneticEncoder ...
