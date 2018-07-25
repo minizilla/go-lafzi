@@ -33,10 +33,16 @@ type line struct {
 	offset, n int64
 }
 
+// ReaderAtCloser ...
+type ReaderAtCloser interface {
+	io.ReaderAt
+	io.Closer
+}
+
 // Index ...
 type Index struct {
 	termlist             io.ReadCloser
-	postlist             io.ReaderAt
+	postlist             ReaderAtCloser
 	scoreOrder, filtered bool
 	filterThreshold      []float64
 	terms                map[trigram.Token]line
@@ -45,7 +51,7 @@ type Index struct {
 
 // NewIndex ...
 func NewIndex(enc phonetic.Encoder,
-	termlist io.ReadCloser, postlist io.ReaderAt) *Index {
+	termlist io.ReadCloser, postlist ReaderAtCloser) *Index {
 	return &Index{
 		termlist:   termlist,
 		postlist:   postlist,
@@ -101,6 +107,11 @@ func (idx *Index) ParseTermlist() error {
 	// last line
 	idx.terms[prevToken] = line{prevOffset, -1}
 	return idx.termlist.Close()
+}
+
+// Close ...
+func (idx *Index) Close() error {
+	return idx.postlist.Close()
 }
 
 // SetPhoneticEncoder ...
