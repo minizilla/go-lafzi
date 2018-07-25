@@ -26,21 +26,21 @@ func main() {
 		log.Fatal("please provide input and output filename")
 	}
 
-	var transFileName, generatedFileName strings.Builder
-	transFileName.WriteString("data/transliteration/")
-	transFileName.WriteString(*in)
-	generatedFileName.WriteString("data/letters/")
-	generatedFileName.WriteString(*out)
+	var transFilename, generatedFilename strings.Builder
+	transFilename.WriteString("data/transliteration/")
+	transFilename.WriteString(*in)
+	generatedFilename.WriteString("data/letters/")
+	generatedFilename.WriteString(*out)
 
 	quranFile, err := os.Open("data/quran/uthmani.txt")
 	if err != nil {
 		log.Fatal(err)
 	}
-	transFile, err := os.Open(transFileName.String())
+	transFile, err := os.Open(transFilename.String())
 	if err != nil {
 		log.Fatal(err)
 	}
-	generatedFile, err := os.Create(generatedFileName.String())
+	generatedFile, err := os.Create(generatedFilename.String())
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -107,7 +107,7 @@ func main() {
 	timeElapsed := timeEnd.Sub(timeStart)
 
 	fmt.Printf("\nProcessed in %f second\n", timeElapsed.Seconds())
-	fmt.Printf("Transliteration input file\t: %s\n", *in)
-	fmt.Printf("Mapping output file\t\t: %s\n", *out)
-	fmt.Printf("Unsolved ambiguous verse\t: %d(%.2f%%)\n", ambiguousVerse, float64(ambiguousVerse)/62.36)
+	fmt.Printf("Transliteration input file\t: %s\n", transFilename.String())
+	fmt.Printf("Mapping output file\t\t: %s\n", generatedFilename.String())
+	fmt.Printf("Unsolved ambiguous verse\t: %d(%.2f%%)\n\n", ambiguousVerse, float64(ambiguousVerse)/62.36)
 }
