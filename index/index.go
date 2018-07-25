@@ -47,13 +47,32 @@ type Index struct {
 func NewIndex(enc phonetic.Encoder,
 	termlist io.ReadCloser, postlist io.ReaderAt) *Index {
 	return &Index{
-		termlist:        termlist,
-		postlist:        postlist,
-		terms:           make(map[trigram.Token]line),
-		encoder:         enc,
-		scoreOrder:      true,
+		termlist:   termlist,
+		postlist:   postlist,
+		terms:      make(map[trigram.Token]line),
+		encoder:    enc,
+		scoreOrder: true,
+		// default threshold
 		filterThreshold: []float64{0.75, 0.65, 0.55},
 	}
+}
+
+// SetFilterThreshold sets filter threshold in form of slice with decreasing element.
+// Threshold are set using index 0 of slice and remaining index are used for fallback threshold.
+// If threshold nil filter threshold use previous threshold. Default if not set
+// are []float64{0.75, 0.65, 0.55}.
+func (idx *Index) SetFilterThreshold(threshold []float64) {
+	if threshold == nil {
+		return
+	}
+	idx.filterThreshold = threshold
+}
+
+// SetScoreOrder sets score order which if true score calculation will consider position
+// of trigram using Longest Increasing Sequence (LIS) and if false score calculation will
+// only consider trigram count.
+func (idx *Index) SetScoreOrder(scoreOrder bool) {
+	idx.scoreOrder = scoreOrder
 }
 
 // ParseTermlist ...
@@ -91,8 +110,11 @@ func (idx *Index) SetPhoneticEncoder(enc phonetic.Encoder) {
 
 // Search searches matched Document from query.
 func (idx *Index) Search(query []byte) ([]document.Document, Meta) {
-	// query -> phonetic encoding -> trigram tokenization
-	// -> matched trigram -> document rangking
+	// query
+	// -> phonetic encoding
+	// -> trigram tokenization
+	// -> matched trigram
+	// -> document rangking
 	// -> search result (documents)
 
 	// [1] phonetic encoding
