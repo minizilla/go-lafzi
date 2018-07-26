@@ -1,0 +1,64 @@
+query variations,NJ(p),VJ(p),NP(p),VP(p),NJ(r),VJ(r),NP(r),VP(r)
+inallahaghofururohim,0.333,0.121,0.345,0.308,1.000,1.000,1.000,1.000
+inallahagofurirrohim,0.333,0.129,0.345,0.645,1.000,1.000,1.000,1.000
+inallahagofurullahim,0.513,0.059,0.800,0.625,1.000,1.000,1.000,1.000
+inallahhagafurrurrahim,0.333,0.121,0.345,0.308,1.000,1.000,1.000,1.000
+inna allah ghirufurrohim,1.000,0.256,0.000,0.750,0.050,1.000,0.000,0.450
+inna allaha ghafur rahiim,0.317,0.074,0.588,0.339,1.000,1.000,1.000,1.000
+inna allaha ghofurun rohiim,0.333,0.121,0.345,0.308,1.000,1.000,1.000,1.000
+innaallahagofururahim,0.333,0.121,0.345,0.308,1.000,1.000,1.000,1.000
+innalilaaha ghafuurur rahiim,0.357,0.124,0.435,0.400,1.000,1.000,1.000,1.000
+innallaaha gafuururrahiim,0.333,0.121,0.345,0.308,1.000,1.000,1.000,1.000
+innallaaha ghafururrahim,0.333,0.121,0.345,0.308,1.000,1.000,1.000,1.000
+innallaaha ghafuurur-rahiim,0.333,0.121,0.345,0.308,1.000,1.000,1.000,1.000
+innallaaha ghafuururrahiiiim,0.333,0.121,0.345,0.308,1.000,1.000,1.000,1.000
+innallaaha ghafuururrahiim,0.333,0.121,0.345,0.308,1.000,1.000,1.000,1.000
+innallaaha ghafuuruurraahiim,0.333,0.121,0.345,0.308,1.000,1.000,1.000,1.000
+innallaaha ghofurur rahiim,0.333,0.121,0.345,0.308,1.000,1.000,1.000,1.000
+innallaaha ghofuurur rohiim,0.333,0.121,0.345,0.308,1.000,1.000,1.000,1.000
+innallaaha ghofuururrahiim,0.333,0.121,0.345,0.308,1.000,1.000,1.000,1.000
+innallah ha gofurrurrohim,0.333,0.121,0.345,0.308,1.000,1.000,1.000,1.000
+innallah haghofururrohim,0.333,0.121,0.345,0.308,1.000,1.000,1.000,1.000
+innallaha ghafurrurrahim,0.333,0.121,0.345,0.308,1.000,1.000,1.000,1.000
+innallaha ghafurur rahim,0.333,0.121,0.345,0.308,1.000,1.000,1.000,1.000
+innallaha ghafurur rohiim,0.333,0.121,0.345,0.308,1.000,1.000,1.000,1.000
+innallaha ghafururrahiim,0.333,0.121,0.345,0.308,1.000,1.000,1.000,1.000
+innallaha ghafururrahim,0.333,0.121,0.345,0.308,1.000,1.000,1.000,1.000
+innallaha ghafururrohiim,0.333,0.121,0.345,0.308,1.000,1.000,1.000,1.000
+innallaha ghafuurur rahiim,0.333,0.121,0.345,0.308,1.000,1.000,1.000,1.000
+innallaha ghafuururrahiim,0.333,0.121,0.345,0.308,1.000,1.000,1.000,1.000
+innallaha ghofurrurrohiim,0.333,0.121,0.345,0.308,1.000,1.000,1.000,1.000
+innallaha ghofururahiim,0.333,0.121,0.345,0.308,1.000,1.000,1.000,1.000
+innallaha ghofururrahiim,0.333,0.121,0.345,0.308,1.000,1.000,1.000,1.000
+innallaha ghofururrahim,0.333,0.121,0.345,0.308,1.000,1.000,1.000,1.000
+innallaha ghofururrohiim,0.333,0.121,0.345,0.308,1.000,1.000,1.000,1.000
+innallaha ghofururrohim,0.333,0.121,0.345,0.308,1.000,1.000,1.000,1.000
+innallaha ghofururrokhiim,0.333,0.121,0.345,0.308,1.000,1.000,1.000,1.000
+innallaha ghofuurur rahiim,0.333,0.121,0.345,0.308,1.000,1.000,1.000,1.000
+innallaha ghofuurur rohiim,0.333,0.121,0.345,0.308,1.000,1.000,1.000,1.000
+innallaha ghofuururrohim,0.333,0.121,0.345,0.308,1.000,1.000,1.000,1.000
+innallaha goffururrahim,0.333,0.121,0.345,0.308,1.000,1.000,1.000,1.000
+innallaha gofhurur rohiim,0.606,0.253,0.905,0.714,1.000,1.000,0.950,1.000
+innallaha gofurur,0.357,0.105,0.417,0.400,1.000,1.000,1.000,1.000
+innallaha gofururrohim,0.333,0.121,0.345,0.308,1.000,1.000,1.000,1.000
+innallaha gofuurur rahiim,0.333,0.121,0.345,0.308,1.000,1.000,1.000,1.000
+innallahaa gafururrahiim,0.333,0.121,0.345,0.308,1.000,1.000,1.000,1.000
+innallahaghofururrahim,0.333,0.121,0.345,0.308,1.000,1.000,1.000,1.000
+innallahaghofuururrahiim,0.333,0.121,0.345,0.308,1.000,1.000,1.000,1.000
+innallahagofurrurohim,0.333,0.121,0.345,0.308,1.000,1.000,1.000,1.000
+innallahagofurrurrohiim,0.333,0.121,0.345,0.308,1.000,1.000,1.000,1.000
+innallahagofururohim,0.333,0.121,0.345,0.308,1.000,1.000,1.000,1.000
+innallahagopururrahim,0.909,0.167,0.947,0.714,1.000,1.000,0.900,1.000
+innallahha ghafururrahiim,0.333,0.121,0.345,0.308,1.000,1.000,1.000,1.000
+innallahha ghofururrohiim,0.333,0.121,0.345,0.308,1.000,1.000,1.000,1.000
+innalllaha ghofururrohim,0.333,0.121,0.345,0.308,1.000,1.000,1.000,1.000
+innalloha ghafuururrohiim,0.333,0.121,0.345,0.308,1.000,1.000,1.000,1.000
+innalloha gofurur rohiim,0.333,0.121,0.345,0.308,1.000,1.000,1.000,1.000
+innalloha gofururrohim,0.333,0.121,0.345,0.308,1.000,1.000,1.000,1.000
+innallohagofururrohim,0.333,0.121,0.345,0.308,1.000,1.000,1.000,1.000
+innallooha ghofururrohiim,0.333,0.121,0.345,0.308,1.000,1.000,1.000,1.000
+innallooha gofuururrohiim,0.333,0.121,0.345,0.308,1.000,1.000,1.000,1.000
+innallāha ghafūrurrahīm,0.333,0.769,0.345,1.000,1.000,1.000,1.000,0.750
+innawallaha ghafurrurrahiim,0.417,0.112,0.435,0.328,1.000,1.000,1.000,1.000
+innawloha ghofuururrokhiim,0.417,0.267,0.435,0.364,1.000,1.000,1.000,1.000
+innnallaaha ghafuururrahiiiim,0.333,0.121,0.345,0.308,1.000,1.000,1.000,1.000

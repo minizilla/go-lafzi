@@ -1,0 +1,52 @@
+query variations,NJ(p),VJ(p),NP(p),VP(p),NJ(r),VJ(r),NP(r),VP(r)
+muhammadarasulullahi,0.857,0.170,0.800,0.571,0.316,0.789,0.211,0.211
+muhammadarrasullullahi,0.857,0.170,0.800,0.571,0.316,0.789,0.211,0.211
+muhammadarrosullohi,0.500,0.112,0.500,0.333,0.053,0.632,0.053,0.105
+muhammaddu rasulullahi,0.857,0.241,0.800,0.750,0.316,0.684,0.211,0.158
+muhammaddurasullahi,0.500,0.161,0.500,0.667,0.053,0.526,0.053,0.105
+muhammaddurrasullullohi,0.857,0.241,0.800,0.750,0.316,0.684,0.211,0.158
+muhammaddurrasulullah,0.857,0.194,0.800,0.667,0.316,0.684,0.211,0.105
+muhammaddurrasulullahi,0.857,0.241,0.800,0.750,0.316,0.684,0.211,0.158
+muhammadorrosulullah,0.857,0.135,0.800,0.667,0.316,0.789,0.211,0.211
+muhammadu rasullulahi,0.857,0.241,0.800,0.750,0.316,0.684,0.211,0.158
+muhammadu rasulullah,0.857,0.194,0.800,0.667,0.316,0.684,0.211,0.105
+muhammadu rasulullahi,0.857,0.241,0.800,0.750,0.316,0.684,0.211,0.158
+muhammadu rosulullah,0.857,0.194,0.800,0.667,0.316,0.684,0.211,0.105
+muhammadun rasulullah,0.857,0.194,0.800,0.667,0.316,0.684,0.211,0.105
+muhammadun rasuulullaahi,0.857,0.241,0.800,0.750,0.316,0.684,0.211,0.158
+muhammadunrosullullah,0.857,0.194,0.800,0.667,0.316,0.684,0.211,0.105
+muhammadur rashulullahi,0.857,0.241,0.800,0.750,0.316,0.684,0.211,0.158
+muhammadur rasullahi,0.500,0.161,0.500,0.667,0.053,0.526,0.053,0.105
+muhammadur rasulullaahi,0.857,0.241,0.800,0.750,0.316,0.684,0.211,0.158
+muhammadur rasulullah ,0.857,0.194,0.800,0.667,0.316,0.684,0.211,0.105
+muhammadur rasulullahi,0.857,0.241,0.800,0.750,0.316,0.684,0.211,0.158
+muhammadur rasuulullahi,0.857,0.241,0.800,0.750,0.316,0.684,0.211,0.158
+muhammadur rosulullohi,0.857,0.241,0.800,0.750,0.316,0.684,0.211,0.158
+muhammadur rosuulullahi,0.857,0.241,0.800,0.750,0.316,0.684,0.211,0.158
+muhammadur-rasuulullaahi,0.857,0.241,0.800,0.750,0.316,0.684,0.211,0.158
+muhammadurasullullahi,0.857,0.241,0.800,0.750,0.316,0.684,0.211,0.158
+muhammadurasulullah,0.857,0.194,0.800,0.667,0.316,0.684,0.211,0.105
+muhammadurasulullahi,0.857,0.241,0.800,0.750,0.316,0.684,0.211,0.158
+muhammadurrashulullah,0.857,0.194,0.800,0.667,0.316,0.684,0.211,0.105
+muhammadurrasullahi,0.500,0.161,0.500,0.667,0.053,0.526,0.053,0.105
+muhammadurrasulluahi,0.333,0.194,0.500,0.667,0.053,0.368,0.053,0.105
+muhammadurrasullullaahi,0.857,0.241,0.800,0.750,0.316,0.684,0.211,0.158
+muhammadurrasulullaahi,0.857,0.241,0.800,0.750,0.316,0.684,0.211,0.158
+muhammadurrasulullah,0.857,0.194,0.800,0.667,0.316,0.684,0.211,0.105
+muhammadurrasulullahi,0.857,0.241,0.800,0.750,0.316,0.684,0.211,0.158
+muhammadurrasululloh,0.857,0.194,0.800,0.667,0.316,0.684,0.211,0.105
+muhammadurrasulullāhi,0.857,0.500,0.800,0.667,0.316,0.368,0.211,0.105
+muhammadurrasuulullaah,0.857,0.194,0.800,0.667,0.316,0.684,0.211,0.105
+muhammadurrasuulullaahi,0.857,0.241,0.800,0.750,0.316,0.684,0.211,0.158
+muhammadurrasuulullahi,0.857,0.241,0.800,0.750,0.316,0.684,0.211,0.158
+muhammadurrosullullahi,0.857,0.241,0.800,0.750,0.316,0.684,0.211,0.158
+muhammadurrosulullaahi,0.857,0.241,0.800,0.750,0.316,0.684,0.211,0.158
+muhammadurrosulullah,0.857,0.194,0.800,0.667,0.316,0.684,0.211,0.105
+muhammadurrosulullahi,0.857,0.241,0.800,0.750,0.316,0.684,0.211,0.158
+muhammadurrosululloh,0.857,0.194,0.800,0.667,0.316,0.684,0.211,0.105
+muhammadurrosulullohi,0.857,0.241,0.800,0.750,0.316,0.684,0.211,0.158
+muhammadurrosuulullohi,0.857,0.241,0.800,0.750,0.316,0.684,0.211,0.158
+muhammmadurrasuulullaahi,0.857,0.241,0.800,0.750,0.316,0.684,0.211,0.158
+muhhamdur rasulullahi,0.857,0.304,0.800,1.000,0.316,0.737,0.211,0.263
+mukhammadurrosullullohi,0.857,0.241,0.800,0.750,0.316,0.684,0.211,0.158
+muuhammadurrosulullahi,0.857,0.241,0.800,0.750,0.316,0.684,0.211,0.158
