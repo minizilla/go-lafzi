@@ -15,38 +15,54 @@ import (
 
 var auto = flag.Bool("auto", true, "phonetic encoding for query")
 var q = flag.String("q", "", "query")
+var v = flag.Bool("v", true, "true: phonetic encoding using vowels, false: phonetic encoding without using vowels")
 
 func main() {
 	timeStart := time.Now()
 
 	flag.Parse()
-	termlist, err := os.Open("data/index/termlist.txt")
+
+	var termlistFilename, postlistFilename string
+	if *v {
+		termlistFilename = "data/index/termlist_vowel.txt"
+		postlistFilename = "data/index/postlist_vowel.txt"
+	} else {
+		termlistFilename = "data/index/termlist.txt"
+		postlistFilename = "data/index/postlist.txt"
+	}
+
+	termlistFile, err := os.Open(termlistFilename)
 	if err != nil {
 		log.Fatal(err)
 	}
-	postlist, err := os.Open("data/index/postlist.txt")
+	postlistFile, err := os.Open(postlistFilename)
 	if err != nil {
 		log.Fatal(err)
 	}
-	generatedLetters, err := os.Open("data/letters/generated.txt")
+	generatedLettersFile, err := os.Open("data/letters/ID.txt")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	defer postlist.Close()
+	defer postlistFile.Close()
 
 	var latinEncoder latin.Encoder
 	var indonesiaEncoder indonesia.Encoder
 
 	var idx *index.Index
 	if *auto {
-		latinEncoder.Parse(generatedLetters)
-		idx = index.NewIndex(&latinEncoder, termlist, postlist)
+		latinEncoder.Parse(generatedLettersFile)
+		generatedLettersFile.Close()
+		latinEncoder.SetVowel(*v)
+		idx = index.NewIndex(&latinEncoder, postlistFile)
 	} else {
-		idx = index.NewIndex(&indonesiaEncoder, termlist, postlist)
+		indonesiaEncoder.SetVowel(*v)
+		idx = index.NewIndex(&indonesiaEncoder, postlistFile)
 	}
 
-	idx.ParseTermlist()
+	idx.ParseTermlist(termlistFile)
+	termlistFile.Close()
+
 	docs, meta := idx.Search([]byte(*q))
 	fmt.Printf("Query\t\t\t: %s\n", meta.Query)
 	fmt.Printf("Phonetic code\t\t: %s\n", meta.PhoneticCode)
