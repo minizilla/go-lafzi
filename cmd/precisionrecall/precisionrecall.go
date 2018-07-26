@@ -85,19 +85,19 @@ func main() {
 	generatedFilename.WriteString("data/letters/")
 	generatedFilename.WriteString(*lang)
 	generatedFilename.WriteString(".txt")
-	generatedLetters, err := os.Open(generatedFilename.String())
+	generatedLettersFile, err := os.Open(generatedFilename.String())
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	var encoderV, encoderN latin.Encoder
-	encoderV.Parse(generatedLetters)
+	encoderV.Parse(generatedLettersFile)
 	encoderV.SetVowel(true)
-	generatedLetters.Seek(0, 0)
-	encoderN.Parse(generatedLetters)
+	generatedLettersFile.Seek(0, 0)
+	encoderN.Parse(generatedLettersFile)
 	encoderN.SetVowel(false)
 
-	generatedLetters.Close()
+	generatedLettersFile.Close()
 
 	var idxV, idxN *index.Index
 	termlistFileVowel, err := os.Open("data/index/termlist_vowel.txt")
