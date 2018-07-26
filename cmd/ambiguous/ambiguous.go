@@ -3,9 +3,13 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"flag"
 	"fmt"
 	"log"
 	"os"
+	"sort"
+	"strings"
+	"time"
 	"unicode/utf8"
 
 	"github.com/billyzaelani/go-lafzi/index"
@@ -13,30 +17,45 @@ import (
 	"github.com/billyzaelani/go-lafzi/phonetic/latin"
 )
 
+var lang = flag.String("lang", "", "language code")
+
+type lowrank struct {
+	rank int
+	text string
+}
+
 func main() {
-	quran, err := os.Open("data/quran/uthmani.txt")
+	timeStart := time.Now()
+
+	flag.Parse()
+	if *lang == "" {
+		log.Fatal("please provide language code, e.g. -lang=ID")
+	}
+
+	var generatedFilename strings.Builder
+	generatedFilename.WriteString("data/letters/")
+	generatedFilename.WriteString(*lang)
+	generatedFilename.WriteString(".txt")
+	generatedLettersFile, err := os.Open(generatedFilename.String())
 	if err != nil {
 		log.Fatal(err)
 	}
-	termlist, err := os.Open("data/index/termlist.txt")
+
+	quranFile, err := os.Open("data/quran/uthmani.txt")
 	if err != nil {
 		log.Fatal(err)
 	}
-	postlist, err := os.Open("data/index/postlist.txt")
+	termlistFile, err := os.Open("data/index/termlist.txt")
 	if err != nil {
 		log.Fatal(err)
 	}
-	generatedLetters, err := os.Open("data/letters/generated.txt")
+	postlistFile, err := os.Open("data/index/postlist.txt")
 	if err != nil {
 		log.Fatal(err)
 	}
-	// transliterate, err := os.Open("data/transliteration/transliteration_ID(ayatalquran.net).txt")
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
 
 	letters := make(map[rune][]byte)
-	generatedLettersScanner := bufio.NewScanner(generatedLetters)
+	generatedLettersScanner := bufio.NewScanner(generatedLettersFile)
 	for generatedLettersScanner.Scan() {
 		mapping := bytes.Split(generatedLettersScanner.Bytes(), []byte("|"))
 		ar, _ := utf8.DecodeRune(mapping[0])
@@ -46,24 +65,28 @@ func main() {
 	letters[ar.Fatha] = []byte("A")
 	letters[ar.Kasra] = []byte("I")
 	letters[ar.Damma] = []byte("U")
+	letters[ar.TehMarbuta] = letters[ar.Teh]
 	letters[' '] = []byte(" ")
 
 	// reset seeker
-	generatedLetters.Seek(0, 0)
+	generatedLettersFile.Seek(0, 0)
 
 	defer func() {
-		postlist.Close()
-		quran.Close()
+		quranFile.Close()
+		postlistFile.Close()
 	}()
 
 	var latinEncoder latin.Encoder
-	latinEncoder.Parse(generatedLetters)
-	idx := index.NewIndex(&latinEncoder, termlist, postlist)
-	idx.ParseTermlist()
+	latinEncoder.Parse(generatedLettersFile)
+	generatedLettersFile.Close()
+	idx := index.NewIndex(&latinEncoder, postlistFile)
+	idx.ParseTermlist(termlistFile)
+	termlistFile.Close()
 
-	sc := bufio.NewScanner(quran)
-	// scTrans := bufio.NewScanner(transliterate)
-	var i, hit int
+	sc := bufio.NewScanner(quranFile)
+	hits := make(map[int]int)
+	verseHits := make(map[int][]lowrank)
+	var i, sumMiss int
 	for sc.Scan() {
 		i++
 		var query bytes.Buffer
@@ -77,27 +100,60 @@ func main() {
 		}
 		docs, _ := idx.Search(query.Bytes())
 		if len(docs) == 0 {
-			fmt.Printf("miss %d\n", i)
+			sumMiss++
+			fmt.Printf("miss %d %s\n", i, query.String())
 			continue
 		}
-		if docs[0].ID == i {
-			hit++
-			fmt.Printf("hit %d\n", i)
+		ranks := -1
+		for rank, doc := range docs {
+			if doc.ID == i {
+				ranks = rank + 1
+				break
+			}
 		}
+		if ranks == -1 {
+			sumMiss++
+			fmt.Printf("miss %d %s\n", i, query.String())
+			continue
+		}
+		// only check ranks 5++
+		if ranks >= 5 {
+			if _, ok := verseHits[ranks]; !ok {
+				verseHits[ranks] = make([]lowrank, 0)
+			}
+			verseHits[ranks] = append(verseHits[ranks], lowrank{i, query.String()})
+		}
+		hits[ranks]++
 	}
-	// for scTrans.Scan() {
-	// 	i++
-	// 	docs, _ := idx.Search(scTrans.Bytes())
-	// 	if len(docs) == 0 {
-	// 		fmt.Printf("miss %d\n", i)
-	// 		continue
-	// 	}
-	// 	if docs[0].ID == i {
-	// 		hit++
-	// 		fmt.Printf("hit %d\n", i)
-	// 	}
-	// }
-	fmt.Printf("\ntotal hit: %d\n", hit)
+
+	fmt.Printf("\nTotal miss\t: %d\n", sumMiss)
+
+	// hits
+	fmt.Println("\nHits")
+	sorted := make([]int, 0, len(hits))
+	for key := range hits {
+		sorted = append(sorted, key)
+	}
+	sort.Ints(sorted)
+	for _, rank := range sorted {
+		fmt.Printf("rank %d\t:%d\n", rank, hits[rank])
+	}
+
+	// verse hits
+	fmt.Println("\nVerse Hits")
+	sorted = make([]int, 0, len(verseHits))
+	for key := range verseHits {
+		sorted = append(sorted, key)
+	}
+	sort.Ints(sorted)
+	for _, rank := range sorted {
+		fmt.Printf("rank %d\t:%v\n", rank, verseHits[rank])
+	}
+
+	timeEnd := time.Now()
+	timeElapsed := timeEnd.Sub(timeStart)
+
+	fmt.Printf("\nProcessed in %f second\n", timeElapsed.Seconds())
 }
 
 func trans(b []byte) []byte {
