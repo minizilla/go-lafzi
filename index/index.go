@@ -35,14 +35,16 @@ type line struct {
 
 // Index ...
 type Index struct {
-	postlist             io.ReaderAt
-	scoreOrder, filtered bool
-	filterThreshold      float64
-	terms                map[trigram.Token]line
-	encoder              phonetic.Encoder
+	postlist                io.ReaderAt
+	scoreOrder, filtered    bool
+	filterThreshold         float64
+	filterThresholdFallback []float64
+	terms                   map[trigram.Token]line
+	encoder                 phonetic.Encoder
 }
 
-var defaultFilterThreshold = 0.5
+var defaultFilterThreshold = 0.75
+var defaultFilterThresholdFallback = []float64{0.95, 0.8, 0.7}
 
 // NewIndex ...
 func NewIndex(enc phonetic.Encoder, postlist io.ReaderAt) *Index {
@@ -52,17 +54,33 @@ func NewIndex(enc phonetic.Encoder, postlist io.ReaderAt) *Index {
 		encoder:    enc,
 		scoreOrder: true,
 		// default threshold
-		filterThreshold: defaultFilterThreshold,
+		filterThreshold:         defaultFilterThreshold,
+		filterThresholdFallback: defaultFilterThresholdFallback[:],
 	}
 }
 
 // SetFilterThreshold sets filter threshold, threshold range between 0 and 1.
-// Default threshold is 0.5 if threshold are not set or set outside range.
+// Default threshold is 0.75. If threshold outside threshold range, it will use current threshold.
 func (idx *Index) SetFilterThreshold(filterThreshold float64) {
 	if filterThreshold < 0 || filterThreshold > 1 {
-		idx.filterThreshold = defaultFilterThreshold
+		return
 	}
 	idx.filterThreshold = filterThreshold
+}
+
+// SetFilterThresholdFallback set filter threshold fallback, fallback consist 3 threshold.
+// Default threshold fallback are {0.95, 0.8, 0.7}. If threshold fallback len is not 3 or the thresholds
+// are outside threshold range, it will use current threshold.
+func (idx *Index) SetFilterThresholdFallback(filterThresholdFallback []float64) {
+	if len(filterThresholdFallback) != 3 {
+		return
+	}
+	for _, filterThreshold := range filterThresholdFallback {
+		if filterThreshold < 0 || filterThreshold > 1 {
+			return
+		}
+	}
+	idx.filterThresholdFallback = filterThresholdFallback[:]
 }
 
 // SetScoreOrder sets score order which if true score calculation will consider position
@@ -202,15 +220,24 @@ func (idx *Index) Search(query []byte) ([]document.Document, Meta) {
 	// sort based on score, higher on index 0
 	sort.Sort(docs)
 	// filter document
+	filterThreshold, minScore := 0.0, 0.0
+	foundDoc := 0
 	n := float64(len(queryTrigram))
-	foundDoc := sort.Search(len(docs), func(i int) bool {
-		return docs[i].Score <= (idx.filterThreshold * n)
-	})
-	minScore := idx.filterThreshold * n
+	for _, th := range idx.filterThresholdFallback {
+		found := sort.Search(len(docs), func(i int) bool {
+			return docs[i].Score <= (th * n)
+		})
+		if found > 0 {
+			filterThreshold = th
+			foundDoc = found
+			break
+		}
+	}
+	minScore = filterThreshold * n
 
 	// [5] search result
 	return docs[:foundDoc], Meta{string(query), string(queryPhonetic),
-		int(n), foundDoc, idx.filterThreshold, minScore}
+		int(n), foundDoc, filterThreshold, minScore}
 }
 
 // Meta ...
