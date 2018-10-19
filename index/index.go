@@ -3,6 +3,7 @@ package index
 import (
 	"bufio"
 	"io"
+	"os"
 	"sort"
 	"strconv"
 	"strings"
@@ -13,9 +14,16 @@ import (
 	"github.com/billyzaelani/go-lafzi/trigram"
 )
 
+// ReaderAtCloser is wrapper between io.ReaderAt and io.Closer
+type ReaderAtCloser interface {
+	io.ReaderAt
+	io.Closer
+}
+
 var maxSectionLength int64 = 255
 
 // seek reads r form offset to sectionLength.
+// TODO: seek might be not concurrency-safe, need further research
 func seek(r io.ReaderAt, offset int64, sectionLength int64) ([]byte, error) {
 	if sectionLength == -1 {
 		sectionLength = maxSectionLength
@@ -29,34 +37,109 @@ func seek(r io.ReaderAt, offset int64, sectionLength int64) ([]byte, error) {
 	return p[:n], nil
 }
 
+// parse termlist to memory
+func parseTermlist(termlist io.Reader) map[trigram.Token]line {
+	// scan termlist, place it to memory
+	sc := bufio.NewScanner(termlist)
+	var prevToken trigram.Token
+	var prevOffset int64
+
+	terms := make(map[trigram.Token]line)
+
+	for sc.Scan() {
+		str := strings.Split(sc.Text(), "|")
+		token := trigram.Token(str[0])
+		// convert guaranted to be success
+		i, _ := strconv.Atoi(str[1])
+		offset := int64(i)
+		if prevToken != "" {
+			n := (offset - prevOffset) - 1
+			terms[prevToken] = line{prevOffset, n}
+		}
+		prevOffset = offset
+		prevToken = token
+	}
+	// last line
+	terms[prevToken] = line{prevOffset, -1}
+	return terms
+}
+
+type vowelSetter interface {
+	SetVowel(bool)
+}
+
 type line struct {
 	offset, n int64
 }
 
 // Index ...
 type Index struct {
-	postlist                io.ReaderAt
-	scoreOrder, filtered    bool
-	filterThreshold         float64
-	filterThresholdFallback []float64
-	terms                   map[trigram.Token]line
-	encoder                 phonetic.Encoder
+	// method
+	encoder phonetic.Encoder
+	// index
+	postlistV, postlistN ReaderAtCloser
+	termlistV, termlistN map[trigram.Token]line
+	// setting
+	scoreOrder, filter bool
+	filterThreshold    float64
 }
 
 var defaultFilterThreshold = 0.75
-var defaultFilterThresholdFallback = []float64{0.95, 0.8, 0.7}
 
 // NewIndex ...
-func NewIndex(enc phonetic.Encoder, postlist io.ReaderAt) *Index {
-	return &Index{
-		postlist:   postlist,
-		terms:      make(map[trigram.Token]line),
-		encoder:    enc,
-		scoreOrder: true,
-		// default threshold
-		filterThreshold:         defaultFilterThreshold,
-		filterThresholdFallback: defaultFilterThresholdFallback[:],
+func NewIndex(enc phonetic.Encoder,
+	termlistV, termlistN string,
+	postlistV, postlistN string) (*Index, error) {
+
+	// TODO: make a better error return
+	pvFile, err := os.Open(postlistV)
+	if err != nil {
+		return nil, err
 	}
+	pnFile, err := os.Open(postlistN)
+	if err != nil {
+		return nil, err
+	}
+
+	tvFile, err := os.Open(termlistV)
+	if err != nil {
+		return nil, err
+	}
+	tnFile, err := os.Open(termlistN)
+	if err != nil {
+		return nil, err
+	}
+
+	tv := parseTermlist(tvFile)
+	tn := parseTermlist(tnFile)
+
+	// close immediately as the termlist file no longer needed
+	// postlist file will used until the apps closed
+	tvFile.Close()
+	tnFile.Close()
+
+	return &Index{
+		encoder:         enc,
+		termlistV:       tv,
+		termlistN:       tn,
+		postlistV:       pvFile,
+		postlistN:       pnFile,
+		scoreOrder:      true,
+		filter:          true,
+		filterThreshold: defaultFilterThreshold,
+	}, nil
+}
+
+// SetScoreOrder sets score order which if true score calculation will consider position
+// of trigram using Longest Increasing Sequence (LIS) and if false score calculation will
+// only consider trigram count.
+func (idx *Index) SetScoreOrder(scoreOrder bool) {
+	idx.scoreOrder = scoreOrder
+}
+
+// SetFilter sets filter document which if true search will return filtered document using filter threshold.
+func (idx *Index) SetFilter(filter bool) {
+	idx.filter = filter
 }
 
 // SetFilterThreshold sets filter threshold, threshold range between 0 and 1.
@@ -68,64 +151,13 @@ func (idx *Index) SetFilterThreshold(filterThreshold float64) {
 	idx.filterThreshold = filterThreshold
 }
 
-// SetFilterThresholdFallback set filter threshold fallback, fallback consist 3 threshold.
-// Default threshold fallback are {0.95, 0.8, 0.7}. If threshold fallback len is not 3 or the thresholds
-// are outside threshold range, it will use current threshold.
-func (idx *Index) SetFilterThresholdFallback(filterThresholdFallback []float64) {
-	if len(filterThresholdFallback) != 3 {
-		return
-	}
-	for _, filterThreshold := range filterThresholdFallback {
-		if filterThreshold < 0 || filterThreshold > 1 {
-			return
-		}
-	}
-	idx.filterThresholdFallback = filterThresholdFallback[:]
-}
-
-// SetScoreOrder sets score order which if true score calculation will consider position
-// of trigram using Longest Increasing Sequence (LIS) and if false score calculation will
-// only consider trigram count.
-func (idx *Index) SetScoreOrder(scoreOrder bool) {
-	idx.scoreOrder = scoreOrder
-}
-
-// ParseTermlist ...
-func (idx *Index) ParseTermlist(termlist io.Reader) {
-	// scan termlist, place it to memory
-	sc := bufio.NewScanner(termlist)
-	var prevToken trigram.Token
-	var prevOffset int64
-
-	for sc.Scan() {
-		str := strings.Split(sc.Text(), "|")
-		token := trigram.Token(str[0])
-		// convert guaranted to be success
-		i, _ := strconv.Atoi(str[1])
-		offset := int64(i)
-		if prevToken != "" {
-			n := (offset - prevOffset) - 1
-			idx.terms[prevToken] = line{prevOffset, n}
-		}
-		prevOffset = offset
-		prevToken = token
-	}
-	// last line
-	idx.terms[prevToken] = line{prevOffset, -1}
-}
-
-// SetPostlist ...
-func (idx *Index) SetPostlist(postlist io.ReaderAt) {
-	idx.postlist = postlist
-}
-
 // SetPhoneticEncoder ...
 func (idx *Index) SetPhoneticEncoder(enc phonetic.Encoder) {
 	idx.encoder = enc
 }
 
 // Search searches matched Document from query.
-func (idx *Index) Search(query []byte) ([]document.Document, Meta) {
+func (idx *Index) Search(query []byte, vowel bool) Result {
 	// query
 	// -> phonetic encoding
 	// -> trigram tokenization
@@ -134,25 +166,38 @@ func (idx *Index) Search(query []byte) ([]document.Document, Meta) {
 	// -> search result (documents)
 
 	// [1] phonetic encoding
+	switch v := idx.encoder.(type) {
+	case vowelSetter:
+		v.SetVowel(vowel)
+	}
 	queryPhonetic := idx.encoder.Encode(query)
 
 	// [2] trigram tokenization
 	queryTrigram := trigram.TokenPositions(queryPhonetic)
 	if len(queryTrigram) <= 0 {
-		return []document.Document{}, Meta{Query: string(query), PhoneticCode: string(queryPhonetic)}
+		return Result{Query: string(query), PhoneticCode: string(queryPhonetic), Docs: []document.Document{}}
 	}
 
 	var matchedPostlist []string
 	matchedDocs := make(map[int]*document.Document)
 
 	// [3] matched trigram
+	var terms map[trigram.Token]line
+	var postlist io.ReaderAt
+	if vowel {
+		terms = idx.termlistV
+		postlist = idx.postlistV
+	} else {
+		terms = idx.termlistN
+		postlist = idx.postlistN
+	}
 	for _, tokenPositions := range queryTrigram {
 		token := tokenPositions.Token
 		pos := tokenPositions.Position
-		if occurs, ok := idx.terms[token]; ok {
+		if occurs, ok := terms[token]; ok {
 			// retrieve posting list based on term
 			// and guarante to be success
-			byteOccur, _ := seek(idx.postlist, occurs.offset, occurs.n)
+			byteOccur, _ := seek(postlist, occurs.offset, occurs.n)
 			occur := string(byteOccur[:])
 			matchedPostlist = strings.Split(occur, ";")
 
@@ -220,30 +265,42 @@ func (idx *Index) Search(query []byte) ([]document.Document, Meta) {
 	// sort based on score, higher on index 0
 	sort.Sort(docs)
 	// filter document
-	filterThreshold, minScore := 0.0, 0.0
-	foundDoc := 0
 	n := float64(len(queryTrigram))
-	for _, th := range idx.filterThresholdFallback {
-		found := sort.Search(len(docs), func(i int) bool {
-			return docs[i].Score <= (th * n)
+	var foundDoc int
+	filterThreshold := idx.filterThreshold
+	minScore := filterThreshold * n
+
+	if idx.filter {
+		foundDoc = sort.Search(len(docs), func(i int) bool {
+			return docs[i].Score <= (filterThreshold * n)
 		})
-		if found > 0 {
-			filterThreshold = th
-			foundDoc = found
-			break
-		}
+	} else {
+		foundDoc = len(docs)
 	}
-	minScore = filterThreshold * n
 
 	// [5] search result
-	return docs[:foundDoc], Meta{string(query), string(queryPhonetic),
-		int(n), foundDoc, filterThreshold, minScore}
+	return Result{
+		Query:           string(query),
+		PhoneticCode:    string(queryPhonetic),
+		TrigramCount:    int(n),
+		FoundDoc:        foundDoc,
+		FilterThreshold: filterThreshold,
+		MinScore:        minScore,
+		Docs:            docs[:foundDoc],
+	}
 }
 
-// Meta ...
-type Meta struct {
+// Close ...
+func (idx *Index) Close() {
+	idx.postlistV.Close()
+	idx.postlistN.Close()
+}
+
+// Result ...
+type Result struct {
 	Query                     string
 	PhoneticCode              string
 	TrigramCount, FoundDoc    int
 	FilterThreshold, MinScore float64
+	Docs                      []document.Document
 }
