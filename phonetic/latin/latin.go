@@ -61,7 +61,7 @@ func (enc *Encoder) Encode(src []byte) []byte {
 	b = enc.joinConsonant(b)
 	b = joinVowel(b)
 	b = diphthongSub(b)
-	b = enc.joinAleefLam(b)
+	// b = enc.joinAleefLam(b)
 	b = markHamzah(b)
 	b = enc.ikhfaSub(b)
 	b = enc.iqlabSub(b)
