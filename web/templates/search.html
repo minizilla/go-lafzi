@@ -1,0 +1,157 @@
+{{define "main"}}
+<div id="mobile_badge" style="position: fixed; top: 10px; right: 10px;">
+    <a href='https://play.google.com/store/apps/details?id=org.lafzi.android&pcampaignid=MKT-Other-global-all-co-prtnr-py-PartBadge-Mar2515-1'
+        title="Baru! Lafzi versi Android" target="_blank">
+        <img alt='Temukan di Google Play' src='https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png'
+            width="180" />
+    </a>
+</div>
+
+<div class="overlay" id='copy-overlay' style="display: none;">
+    <div class="modalDialog" id='copy-dialog' style="display: none;">
+        <p style="color: #666;">Salin dengan menekan CTRL+C pada
+            <em>keyboard</em>.</p>
+        <textarea id="copy-text" readonly="readonly"></textarea>
+        <input type="button" class="graybtn" value="Selesai" onclick="hideCopyDialog();" style="color: #666666; font-size: 10px; padding: 2px 5px; float: right; margin-top: 10px;"
+        />
+        <div style="clear: both"></div>
+    </div>
+</div>
+
+<div id="main-wrap" class="bg-dots-light">
+    <div id="main">
+        <div id="header">
+            <a href="./">
+                <img src="/assets/img/logo-s.png" alt="Lafzi" id="logo-small" width="124" height="54" />
+            </a>
+
+            <form action="" method="get" id="srp-search-form">
+                <div id="search-form-container">
+                    <input type="text" name="q" id="search-box" value="" autocomplete="off"
+                    /><input type="submit" value="Cari" id="search-submit" />
+                </div>
+
+                <div id="search-options-container">
+                    <input type="button" class="search-option" value="Bantuan &raquo;" id="button-help" />
+                    <input type="button" class="search-option" value="Pengaturan &raquo;" id="button-option" title="Pengaturan tambahan" />
+                    <div id="search-checkboxes">
+                        <!-- <?php /*<input type="checkbox" id="os" name="order" <?php if(isset($order) && $order == true) echo 'checked="checked"' ?>/> -->
+                        <label for="os">Perhitungkan keterurutan</label>*/ ?>
+                        <!-- <input type="checkbox" id="vw" name="vowel" <?php if(isset($vowel) && $vowel==t rue) echo 'checked="checked"' ?>/> -->
+                        <label for="vw">Perhitungkan huruf vokal</label>
+                    </div>
+                </div>
+            </form>
+
+            <br style="clear: both" />
+
+            <div id="search-help-box" style="position: absolute; left : 180px; width: 500px; z-index: 200">
+                Ketikkan potongan ayat atau lafaz dalam Al-Quran (tidak harus benar cara penulisannya), contoh:
+
+                <ul>
+                    <li>alhamdulillahi rabbil-'alamin</li>
+                    <li>innalloha ma'a shoobiriin</li>
+                    <li>laa ilaaha illallaah</li>
+                    <li>kun fayakuun</li>
+                </ul>
+
+                Tips: Gunakan spasi untuk pemisah antar kata agar lebih akurat.
+            </div>
+        </div>
+
+        <div id="srp-header">
+            <h3>Hasil Pencarian ({{.FoundDoc}} hasil)</h3>
+            <!-- {{if .FoundDoc}} -->
+            <div id="hl-switch" title="Tampilkan sorotan pada bagian yang kira-kira cocok">
+                <input type="checkbox" id="cx_tr" checked="checked" onchange="if(this.checked == true) showTrans(); else hideTrans();" />
+                <label for="cx_tr">Tampilkan terjemahan</label>
+                <input type="checkbox" id="hl1" checked="checked" onchange="if(this.checked == true) showHilight(); else hideHilight();" />
+                <label for="hl1">Tampilkan sorotan</label>
+            </div>
+            <!-- {{end}} -->
+            <br style="clear: both" />
+        
+            <table>
+                <tr>
+                    <td>Query</td>
+                    <td>:
+                        {{.Query}}
+                    </td>
+                </tr>
+                <tr>
+                    <td>Kode fonetik</td>
+                    <td>:
+                        {{.PhoneticCode}}
+                    </td>
+                </tr>
+                <tr>
+                    <td>Jumlah trigram query</td>
+                    <td>:
+                        {{.TrigramCount}}
+                    </td>
+                </tr>
+                <tr>
+                    <td>Ditemukan</td>
+                    <td>:
+                        {{.FoundDoc}}
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <div id="srb-container">
+            {{range $i, $val := .Docs}}
+                <div class='sura-name'>
+                    <div class='num'>{{$i}}</div>
+                    <span>ID surat {{$val.ID}}</span>
+                </div>
+                <br>
+            {{end}}
+        </div>
+    </div>
+</div>
+{{end}}
+{{define "scripts"}}
+<script type="text/javascript">
+
+    var placeHolderText = "";
+
+    $(document).ready(function () {
+        placeHolderText = $('#search-box').val();
+
+        $('#search-box').focus(function () {
+            if ($(this).val() == placeHolderText) {
+                $(this).removeClass('empty');
+                $(this).val('');
+            }
+        });
+
+        $('#search-box').blur(function () {
+            if ($(this).val() == '') {
+                $(this).addClass('empty');
+                $(this).val(placeHolderText);
+            }
+        });
+
+        $('#button-option').click(function () {
+            $(this).hide();
+            $('#search-checkboxes').css({ display: 'inline-block' });
+        });
+
+        //                $('#search-checkboxes').mouseleave(function(){
+        //                    $(this).hide(); 
+        //                    $('#button-option').css({display : 'inline-block'});
+        //                });
+
+        $('#button-help').click(function () {
+            $('#search-help-box').slideToggle('fast');
+        });
+
+        $('#main-search-form').submit(function () {
+            if ($('#search-box').val() == placeHolderText || $('#search-box').val() == '')
+                return false;
+        });
+
+    });
+</script>
+{{end}}
