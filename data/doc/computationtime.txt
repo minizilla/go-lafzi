@@ -1,0 +1,24 @@
+automatic/NJ:
+        - min: 0.000591 second
+        - max: 0.013515 second
+automatic/NP:
+        - min: 0.000699 second
+        - max: 0.014664 second
+automatic/VJ:
+        - min: 0.001690 second
+        - max: 0.036591 second
+automatic/VP:
+        - min: 0.002437 second
+        - max: 0.054291 second
+manual/NJ:
+        - min: 0.000524 second
+        - max: 0.014323 second
+manual/NP:
+        - min: 0.000578 second
+        - max: 0.014377 second
+manual/VJ:
+        - min: 0.001981 second
+        - max: 0.046181 second
+manual/VP:
+        - min: 0.001324 second
+        - max: 0.051071 second
