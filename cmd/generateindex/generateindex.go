@@ -64,7 +64,9 @@ func main() {
 		data := strings.Split(sc.Text(), "|")
 		docID := data[0]
 		tgram := trigram.TokenPositions([]byte(data[1]))
-		for token, pos := range tgram {
+		for _, tokenposition := range tgram {
+			token := tokenposition.Token
+			pos := tokenposition.Position
 			if _, ok := index[token]; !ok {
 				index[token] = append([]occurence{}, occurence{docID, pos})
 			} else {

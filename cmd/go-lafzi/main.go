@@ -7,5 +7,7 @@ import (
 )
 
 func main() {
-	log.Fatal(web.Server.ListenAndServe())
+	server := web.Server
+	log.Printf("Listening on %s", server.Addr)
+	log.Fatal(server.ListenAndServe())
 }

@@ -12,12 +12,15 @@ import (
 	"strings"
 	"time"
 
+	"github.com/billyzaelani/go-lafzi/phonetic/indonesia"
+
 	"github.com/billyzaelani/go-lafzi/document"
 
 	"github.com/billyzaelani/go-lafzi/index"
 	"github.com/billyzaelani/go-lafzi/phonetic/latin"
 )
 
+var auto = flag.Bool("auto", true, "phonetic encoding for query")
 var lang = flag.String("lang", "", "language code")
 
 func main() {
@@ -108,9 +111,17 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	idxV = index.NewIndex(&encoderV, postlistFileVowel)
-	idxV.ParseTermlist(termlistFileVowel)
-	termlistFileVowel.Close()
+	if *auto == true {
+		idxV = index.NewIndex(&encoderV, postlistFileVowel)
+		idxV.ParseTermlist(termlistFileVowel)
+		termlistFileVowel.Close()
+	} else {
+		encoder := &indonesia.Encoder{}
+		encoder.SetVowel(true)
+		idxV = index.NewIndex(encoder, postlistFileVowel)
+		idxV.ParseTermlist(termlistFileVowel)
+		termlistFileVowel.Close()
+	}
 
 	termlistFile, err := os.Open("data/index/termlist.txt")
 	if err != nil {
@@ -120,9 +131,17 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	idxN = index.NewIndex(&encoderN, postlistFile)
-	idxN.ParseTermlist(termlistFile)
-	termlistFileVowel.Close()
+	if *auto == true {
+		idxN = index.NewIndex(&encoderN, postlistFile)
+		idxN.ParseTermlist(termlistFile)
+		termlistFileVowel.Close()
+	} else {
+		encoder := &indonesia.Encoder{}
+		encoder.SetVowel(false)
+		idxN = index.NewIndex(encoder, postlistFile)
+		idxN.ParseTermlist(termlistFile)
+		termlistFileVowel.Close()
+	}
 
 	defer func() {
 		postlistFileVowel.Close()
@@ -132,9 +151,15 @@ func main() {
 	outFilename := []string{"A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "A9", "A10",
 		"A11", "A12", "A13", "A14", "A15", "A16", "B1", "B2", "B3", "B4", "B5"}
 
-	os.Mkdir(fmt.Sprintf("data/testing/%s/", *lang), os.ModePerm)
+	path := ""
+	if *auto {
+		path = fmt.Sprintf("data/testing/%s(otomatis)/", *lang)
+	} else {
+		path = fmt.Sprintf("data/testing/%s(manual)/", *lang)
+	}
+	os.Mkdir(path, os.ModePerm)
 
-	avgFile, err := os.Create(fmt.Sprintf("data/testing/%s/avg.csv", *lang))
+	avgFile, err := os.Create(fmt.Sprintf("%savg.csv", path))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -145,8 +170,9 @@ func main() {
 		"NJ(r)", "VJ(r)", "NP(r)", "VP(r)"})
 
 	result := countIRs(idxV, idxN, listQueries, relevanceJudgment)
+	records := make(IRs, 0, 21)
 	for i, res := range result {
-		outFile, err := os.Create(fmt.Sprintf("data/testing/%s/%s.csv", *lang, outFilename[i]))
+		outFile, err := os.Create(fmt.Sprintf("%s%s.csv", path, outFilename[i]))
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -175,8 +201,57 @@ func main() {
 		outFileCSV.Flush()
 		outFile.Close()
 
-		record := strings.Split(avg.String(), ",")
-		avgFileCSV.Write(record)
+		records = append(records, avg.Count())
+	}
+
+	var N, V, J, P, A, B float64
+
+	// count avg of N, V
+	var sumN, sumV float64
+	n := float64(len(records) * 2)
+	for _, record := range records {
+		sumN += record.precision.NJ + record.precision.NP
+		sumV += record.precision.VJ + record.precision.VP
+	}
+	N = sumN / n
+	V = sumV / n
+
+	// count avg of J, P
+	var sumJ, sumP float64
+	n = float64(len(records) * 2)
+	for _, record := range records {
+		sumJ += record.precision.NJ + record.precision.VJ
+		sumP += record.precision.NP + record.precision.VP
+	}
+	J = sumJ / n
+	P = sumP / n
+
+	// count avg of A, B
+	var sumA, sumB float64
+	n = float64(16 * 4)
+	for i := 0; i < 16; i++ {
+		record := records[i]
+		sumA += record.precision.NJ + record.precision.VJ +
+			record.precision.NP + record.precision.VP
+	}
+	A = sumA / n
+	n = float64(5 * 4)
+	for i := 16; i < 21; i++ {
+		record := records[i]
+		sumB += record.precision.NJ + record.precision.VJ +
+			record.precision.NP + record.precision.VP
+	}
+	B = sumB / n
+
+	fmt.Printf("N: %.3f\n", N)
+	fmt.Printf("V: %.3f\n", V)
+	fmt.Printf("J: %.3f\n", J)
+	fmt.Printf("P: %.3f\n", P)
+	fmt.Printf("A: %.3f\n", A)
+	fmt.Printf("B: %.3f\n", B)
+
+	for _, record := range records {
+		avgFileCSV.Write(strings.Split(record.String(), ","))
 	}
 
 	avgFileCSV.Flush()
@@ -208,13 +283,17 @@ func countIRs(idxV *index.Index, idxN *index.Index,
 			q := []byte(query)
 
 			idxN.SetScoreOrder(false)
-			docsNJ, _ := idxN.Search(q)
+			res := idxN.Search(q)
+			docsNJ := res.Docs
 			idxV.SetScoreOrder(false)
-			docsVJ, _ := idxV.Search(q)
+			res = idxV.Search(q)
+			docsVJ := res.Docs
 			idxN.SetScoreOrder(true)
-			docsNP, _ := idxN.Search(q)
+			res = idxN.Search(q)
+			docsNP := res.Docs
 			idxV.SetScoreOrder(true)
-			docsVP, _ := idxV.Search(q)
+			res = idxV.Search(q)
+			docsVP := res.Docs
 
 			pNJ, rNJ := countPrecisionRecall(docsNJ, rjMap)
 			pVJ, rVJ := countPrecisionRecall(docsVJ, rjMap)
@@ -264,6 +343,26 @@ type AVG struct {
 	n            float64
 	sumPrecision Precision
 	sumRecall    Recall
+}
+
+// Count ...
+func (avg *AVG) Count() IR {
+	n := avg.n
+	return IR{
+		query: avg.queryCode,
+		precision: Precision{
+			NJ: avg.sumPrecision.NJ / n,
+			VJ: avg.sumPrecision.VJ / n,
+			NP: avg.sumPrecision.NP / n,
+			VP: avg.sumPrecision.VP / n,
+		},
+		recall: Recall{
+			NJ: avg.sumRecall.NJ / n,
+			VJ: avg.sumRecall.VJ / n,
+			NP: avg.sumRecall.NP / n,
+			VP: avg.sumRecall.VP / n,
+		},
+	}
 }
 
 func (avg *AVG) String() string {

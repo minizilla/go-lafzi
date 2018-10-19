@@ -16,6 +16,8 @@ import (
 var auto = flag.Bool("auto", true, "phonetic encoding for query")
 var q = flag.String("q", "", "query")
 var v = flag.Bool("v", true, "true: phonetic encoding using vowels, false: phonetic encoding without using vowels")
+var p = flag.Bool("p", true, "true: document ranking using position, false: document rangking using count")
+var th = flag.Float64("th", 0.85, "default of threshold is 0.85")
 
 func main() {
 	timeStart := time.Now()
@@ -62,14 +64,17 @@ func main() {
 
 	idx.ParseTermlist(termlistFile)
 	termlistFile.Close()
+	idx.SetScoreOrder(*p)
+	idx.SetFilterThreshold(*th)
 
-	docs, meta := idx.Search([]byte(*q))
-	fmt.Printf("Query\t\t\t: %s\n", meta.Query)
-	fmt.Printf("Phonetic code\t\t: %s\n", meta.PhoneticCode)
-	fmt.Printf("Trigram count\t\t: %d\n", meta.TrigramCount)
-	fmt.Printf("Document found\t\t: %d\n", meta.FoundDoc)
-	fmt.Printf("Filter threshold\t: %.2f\n", meta.FilterThreshold)
-	fmt.Printf("Score minimum\t\t: %.2f\n\n", meta.MinScore)
+	result := idx.Search([]byte(*q))
+	docs := result.Docs
+	fmt.Printf("Query\t\t\t: %s\n", result.Query)
+	fmt.Printf("Phonetic code\t\t: %s\n", result.PhoneticCode)
+	fmt.Printf("Trigram count\t\t: %d\n", result.TrigramCount)
+	fmt.Printf("Document found\t\t: %d\n", result.FoundDoc)
+	fmt.Printf("Filter threshold\t: %.2f\n", result.FilterThreshold)
+	fmt.Printf("Score minimum\t\t: %.2f\n\n", result.MinScore)
 
 	for i, doc := range docs {
 		fmt.Printf("%d.\tID: %d\n", i+1, doc.ID)
