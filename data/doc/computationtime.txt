@@ -22,3 +22,5 @@ manual/VJ:
 manual/VP:
         - min: 0.001324 second
         - max: 0.051071 second
+
+generate letters mapping: 1.136878 second
