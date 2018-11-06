@@ -7,9 +7,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/billyzaelani/go-lafzi/phonetic/indonesia"
-
 	"github.com/billyzaelani/go-lafzi/index"
+	"github.com/billyzaelani/go-lafzi/phonetic/indonesia"
 	"github.com/billyzaelani/go-lafzi/phonetic/latin"
 )
 
@@ -17,57 +16,25 @@ var auto = flag.Bool("auto", true, "phonetic encoding for query")
 var q = flag.String("q", "", "query")
 var v = flag.Bool("v", true, "true: phonetic encoding using vowels, false: phonetic encoding without using vowels")
 var p = flag.Bool("p", true, "true: document ranking using position, false: document rangking using count")
-var th = flag.Float64("th", 0.85, "default of threshold is 0.85")
+var th = flag.Float64("th", 0.75, "default of threshold is 0.75")
 
 func main() {
 	timeStart := time.Now()
 
 	flag.Parse()
 
-	var termlistFilename, postlistFilename string
-	if *v {
-		termlistFilename = "data/index/termlist_vowel.txt"
-		postlistFilename = "data/index/postlist_vowel.txt"
-	} else {
-		termlistFilename = "data/index/termlist.txt"
-		postlistFilename = "data/index/postlist.txt"
-	}
+	idx, automaticEncoder, manualEncoder := newIndex()
+	defer idx.Close()
 
-	termlistFile, err := os.Open(termlistFilename)
-	if err != nil {
-		log.Fatal(err)
-	}
-	postlistFile, err := os.Open(postlistFilename)
-	if err != nil {
-		log.Fatal(err)
-	}
-	generatedLettersFile, err := os.Open("data/letters/ID.txt")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	defer postlistFile.Close()
-
-	var latinEncoder latin.Encoder
-	var indonesiaEncoder indonesia.Encoder
-
-	var idx *index.Index
 	if *auto {
-		latinEncoder.Parse(generatedLettersFile)
-		generatedLettersFile.Close()
-		latinEncoder.SetVowel(*v)
-		idx = index.NewIndex(&latinEncoder, postlistFile)
+		idx.SetPhoneticEncoder(automaticEncoder)
 	} else {
-		indonesiaEncoder.SetVowel(*v)
-		idx = index.NewIndex(&indonesiaEncoder, postlistFile)
+		idx.SetPhoneticEncoder(manualEncoder)
 	}
-
-	idx.ParseTermlist(termlistFile)
-	termlistFile.Close()
 	idx.SetScoreOrder(*p)
 	idx.SetFilterThreshold(*th)
 
-	result := idx.Search([]byte(*q))
+	result := idx.Search([]byte(*q), *v)
 	docs := result.Docs
 	fmt.Printf("Query\t\t\t: %s\n", result.Query)
 	fmt.Printf("Phonetic code\t\t: %s\n", result.PhoneticCode)
@@ -87,4 +54,24 @@ func main() {
 	timeElapsed := timeEnd.Sub(timeStart)
 
 	fmt.Printf("Processed in %f second\n", timeElapsed.Seconds())
+}
+
+func newIndex() (*index.Index, *latin.Encoder, *indonesia.Encoder) {
+	// create index
+	idx, err := index.NewIndex(nil,
+		"data/index/termlist_vowel.txt", "data/index/termlist.txt", // termlist
+		"data/index/postlist_vowel.txt", "data/index/postlist.txt") // postlist
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var automaticEncoder latin.Encoder
+	var manualEncoder indonesia.Encoder
+	generatedLettersFile, err := os.Open("data/letters/ID.txt")
+	if err != nil {
+		log.Fatal(err)
+	}
+	automaticEncoder.Parse(generatedLettersFile)
+	generatedLettersFile.Close()
+	return idx, &automaticEncoder, &manualEncoder
 }
