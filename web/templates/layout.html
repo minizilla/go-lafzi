@@ -1,17 +1,13 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
     <head>
-        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-        <title>Lafzi - Pencarian Lafaz Quran</title>
-        <link href="/assets/main.css" type="text/css" rel="stylesheet" />
-        <link rel="shortcut icon" href="/assets/img/favicon.ico" type="image/x-icon" />
-        <script type="text/javascript" src="/assets/jquery.1.7.js"></script>
+        {{template "head"}}
     </head>
     <body>
-        <div id="main-wrap">
+        {{template "badge"}}
+        <div id="main-wrap" class="bg-dots-light">
             <div id="main">
                 {{template "main" .}}
-                {{template "footer"}}
             </div>
         </div>
         {{template "scripts"}}

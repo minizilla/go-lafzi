@@ -1,3 +1,10 @@
+{{define "head"}}
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Lafzi - Tentang Lafzi</title>
+    <link href="/assets/main.css" type="text/css" rel="stylesheet" />
+    <script type="text/javascript" src="/assets/jquery.1.7.js"></script>
+{{end}}
+{{define "badge"}}{{end}}
 {{define "main"}}
 <div id="header">
     <a href="/">
@@ -19,5 +26,6 @@
     Aplikasi ini adalah hasil dari penelitian skripsi Departemen Ilmu Komputer, Institut Pertanian Bogor oleh Muhammad Abrar
     Istiadi, S.Kom dengan pembimbing Ahmad Ridha, S.Kom MS dan dilanjutkan pengembangannya oleh Billy Zaelani Malik.
 </p>
+{{template "footer" .}}
 {{end}}
 {{define "scripts"}}{{end}}

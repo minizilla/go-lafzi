@@ -1,60 +1,114 @@
 package web
 
 import (
-	"fmt"
+	"bufio"
+	"flag"
 	"log"
 	"net/http"
 	"os"
 
 	"github.com/billyzaelani/go-lafzi/index"
+	"github.com/billyzaelani/go-lafzi/phonetic/indonesia"
 	"github.com/billyzaelani/go-lafzi/phonetic/latin"
 )
 
-var (
-	encoder          latin.Encoder
-	idx              *index.Index
-	termlistFilename = "data/index/termlist_vowel.txt"
-	postlistFilename = "data/index/postlist_vowel.txt"
-)
+var auto = flag.Bool("auto", true, "phonetic encoding for query")
+var p = flag.Bool("p", true, "true: document ranking using position, false: document ranking using count")
+var th = flag.Float64("th", 0.75, "default of threshold is 0.75")
 
 func init() {
-	// setup mapping letters
-	generatedLettersFile, err := os.Open("data/letters/ID.txt")
+	quran, err := readLines("data/quran/uthmani.txt")
 	if err != nil {
 		log.Fatal(err)
 	}
-	encoder.Parse(generatedLettersFile)
-	encoder.SetVowel(true)
-	generatedLettersFile.Close()
+	translation, err := readLines("data/translation/trans-indonesian.txt")
+	if err != nil {
+		log.Fatal(err)
+	}
+	idx, err := index.NewIndex(nil,
+		"data/index/termlist_vowel.txt", "data/index/termlist.txt", // termlist
+		"data/index/postlist_vowel.txt", "data/index/postlist.txt") // postlist
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	termlistFile, err := os.Open(termlistFilename)
-	if err != nil {
-		log.Fatal(err)
+	if *auto {
+		generatedLettersFile, err := os.Open("data/letters/ID.txt")
+		if err != nil {
+			log.Fatal(err)
+		}
+		var automaticEncoder latin.Encoder
+		automaticEncoder.Parse(generatedLettersFile)
+		generatedLettersFile.Close()
+		idx.SetPhoneticEncoder(&automaticEncoder)
+	} else {
+		idx.SetPhoneticEncoder(&indonesia.Encoder{})
 	}
-	postlistFile, err := os.Open(postlistFilename)
-	if err != nil {
-		log.Fatal(err)
-	}
-	idx = index.NewIndex(&encoder, postlistFile)
-	idx.ParseTermlist(termlistFile)
-	termlistFile.Close()
+	idx.SetScoreOrder(*p)
+	idx.SetFilterThreshold(*th)
 
-	router.NewRoute().
+	r.NewRoute().
 		Methods("GET").
 		Path("/web/search").
-		HandlerFunc(serveSearch)
+		Handler(serveSearch{
+			idx,
+			quran,
+			translation,
+		})
 }
 
-func serveSearch(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()
-	query := encoder.Encode([]byte(r.Form["q"][0]))
-	res := idx.Search(query)
-	docs := res.Docs
-	for i, doc := range docs {
-		fmt.Printf("%d.\tID: %d\n", i+1, doc.ID)
-		fmt.Printf("\tScore: %.2f\n", doc.Score)
-		fmt.Printf("\tMatched terms: %v\n", doc.MatchedTerms)
-		fmt.Printf("\tLIS: %v\n\n", doc.LIS)
+type serveSearch struct {
+	idx         *index.Index
+	quran       []string
+	translation []string
+}
+
+func (s serveSearch) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	var vowel, verbose bool
+	if r.FormValue("vowel") == "on" {
+		vowel = true
 	}
-	serveHTMLTemplate(w, r, tplSearch, res)
+	if r.FormValue("debug") == "on" {
+		verbose = true
+	}
+	query := r.FormValue("q")
+	res := s.idx.Search([]byte(query), vowel)
+	// if res.FoundDoc > 0 {
+	// 	for doc := range res.Docs {
+
+	// 	}
+	// }
+
+	serveHTMLTemplate(w, r, tplSearch, SearchData{
+		Result:        res,
+		Vowel:         vowel,
+		Verbose:       verbose,
+		Quran:         s.quran,
+		Translation:   s.translation,
+		CopyrightDate: newCopyrightDate(),
+	})
+}
+
+// SearchData ...
+type SearchData struct {
+	index.Result
+	Vowel, Verbose bool
+	Quran          []string
+	Translation    []string
+	CopyrightDate
+}
+
+func readLines(path string) ([]string, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	var lines []string
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		lines = append(lines, scanner.Text())
+	}
+	return lines, scanner.Err()
 }

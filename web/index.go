@@ -1,13 +1,15 @@
 package web
 
-import "net/http"
+import (
+	"net/http"
+)
 
 func init() {
-	router.NewRoute().
+	r.NewRoute().
 		Methods("GET").
 		Path("/").
 		HandlerFunc(serveIndex)
-	router.NewRoute().
+	r.NewRoute().
 		Methods("GET").
 		Path("/web/").
 		HandlerFunc(serveWeb)
@@ -18,5 +20,5 @@ func serveIndex(w http.ResponseWriter, r *http.Request) {
 }
 
 func serveWeb(w http.ResponseWriter, r *http.Request) {
-	serveHTMLTemplate(w, r, tplIndex, nil)
+	serveHTMLTemplate(w, r, tplIndex, newCopyrightDate())
 }
