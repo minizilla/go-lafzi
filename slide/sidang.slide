@@ -1,0 +1,304 @@
+Pemadanan Kode Fonetis Secara Otomatis antara Aksara Arab dan Aksara Latin Menggunakan Transliterasi
+7 Nov 2018
+
+Billy Zaelani Malik
+m.billyzaelani@gmail.com
+https://github.com/billyzaelani
+
+* Outline
+- Pendahuluan
+- Metode
+- Hasil dan Pembahasan
+- Simpulan dan Saran
+- Daftar Pustaka
+- Demo
+
+* Pendahuluan
+
+* Alquran
+Hammo _et_al_. (2007):
+- 77.485 kata
+- 6.236 ayat
+- 114 surat
+
+* Sistem pencarian berbasis kemiripan fonetis
+"Pencarian berbasis kemiripan fonetis memanfaatkan *pencocokan*fonetis* untuk membuat padanan aksara"
+- Istiadi 2012
+
+.image assets/islamicity.png
+.caption [[https://www.islamicity.org/ps/][islamicity.org]]
+
+.image assets/lafzi.png
+.caption [[http://lafzi.apps.cs.ipb.ac.id/web/][Istiadi (2012)]]
+
+* Padanan aksara yang berbeda
+.image assets/padanan.png _ 900
+
+* Transliterasi
+.image assets/transliterasi.png
+.caption [[http://www.qurandatabase.org][qurandatabase.org]]
+
+* Silabifikasi
+"Silabifikasi adalah proses memecah *kata* menjadi *silabel* (suku kata)"
+- Adsett 2008
+
+* Penerapan silabifikasi
+- Pemrosesan bahasa natural: _speech_recognition_ dan _speech_synthesis_ (Adsett 2008)
+- Al-Muhtaseb dan Bellegdi (2016) membangun sistem _Text-to-Speech_ untuk pembacaan Alquran
+- Soori _et_al_. (2011) serta Lansky dan Zemlicka (2006) mengembangkan algoritme kompresi dokumen berbasis silabel
+
+* Perumusah masalah
+- Bagaimana cara *membangkitkan*kode*fonetis* secara *otomatis* berdasarkan *transliterasi*?
+- Bagaimana *pengaruh*ambiguitas*transliterasi* terhadap hasil pembangkitan padanan aksara?
+- Berapa ukuran *kinerja*sistem* pencarian ayat Alquran berbasis kemiripan fonetis yang menggunakan kode fonetis yang dibangkitkan?
+- Bagaimana *perbedaan*kinerja* antara *sistem* dengan pengodean fonetis yang dibangkitkan dan sistem dengan pengodean fonetis secara manual?
+
+* Tujuan
+- *Membangkitkan*kode*fonetis* secara *otomatis* berdasarkan *transliterasi*
+- Mengukur *pengaruh*ambiguitas*transliterasi* terhadap hasil pembangkitan padanan aksara
+- Mengukur *kinerja*sistem* pencarian ayat Alquran berbasis kemiripan fonetis yang menggunakan kode fonetis yang dibangkitkan
+- *Membandingkan*kinerja* antara *sistem* dengan kode fonetis yang dibandingkan dan sistem dengan kode fonetis secara manual
+
+* Ruang lingkup penelitian
+- Menggunakan sistem [[https://github.com/lafzi/lafzi-web][Lafzi]] secara lengkap yang hanya dimodifikasi pada bagian *pengodean*fonetis*
+- Transliterasi yang digunakan hanya *transliterasi*bahasa*Indonesia*
+
+* Metode
+
+* Gambaran umum sistem Lafzi
+.image assets/flowchart_lafzi.png _ 650
+.caption Istiadi (2012)
+
+* Gambaran umum sistem Lafzi pada penelitian ini
+.image assets/flowchart_lafzi_auto.png _ 500
+
+* Prosedur pengodean fonetis teks Alquran (Istiadi 2012)
+1. Penghilangan spasi
+2. Penghilangan _syaddah_
+3. Penggabungan konsonan mati
+4. Penanganan akhir ayat
+5. Substitusi _tanwin_
+6. Penghilangan bacaan panjang
+7. Penghilangan huruf yang tidak dibaca
+8. Substitusi bacaan _iqlab_
+9. Substitusi bacaan _idgham_
+*10.*Pemadanan*ke*kode*fonetis*
+
+* Prosedur pengodean fonetis teks Latin (Istiadi 2012)
+1. Substitusi vokal
+2. Penggabungan konsonan
+3. Penggabungan vokal
+4. Substitusi diftong
+5. Pemadanan huruf _hamzah_
+6. Substitusi bacaan _ikhfa_
+7. Substitusi bacaan _iqlab_
+8. Substitusi bacaan _idgham_
+*9.*Pemadanan*ke*kode*fonetis*
+10. Penghilangan spasi
+
+* Data Teks Alquran
+- Data teks Alquran yang dipakai adalah data yang sama yang dipakai untuk korpus
+- Lafzi menggunakan data teks Alquran yang diperoleh dari [[http://tanzil.net][Tanzil Project (2011)]]
+- Format data berupa _file_ teks yang setiap barisnya berupa 1 ayat dalam Alquran
+
+* Data Teks Transliterasi
+- Transliterasi Alquran dalam aksara Latin
+- Transliterasi yang dipakai yaitu transliterasi bahasa Indonesia
+- Format data transliterasi menyerupai format data Alquran yaitu berupa _file_ teks yang setiap barisnya berupa 1 ayat dalam Alquran
+
+* Struktur Silabel (Bartlett et al. 2009)
+- Onset (opsional)
+- Nucleus
+- Coda (opsional)
+
+.image assets/struktur_silabel.png _ 800
+
+* Silabifikasi
+- Spesifik untuk setiap bahasa (Soori 2011)
+- _onset_ dan _coda_ kompleks
+
+.image assets/silabel_kompleks.png _ 1000
+
+* Pola silabel pada bahasa Arab (Elshafei et al. 2002)
+.image assets/pola_silabel.png _ 1000
+- C : huruf konsonan
+- V : vokal pendek
+- W : vokal panjang
+
+* Penyandingan silabel
+Silabel dari hasil silabifikasi pada teks Alquran dan teks transliterasi disandingkan untuk mendapat padanan aksara
+
+* Pengaruh ambiguitas teks transliterasi
+.image assets/pengaruh_ambiguitas.png _ 1000
+
+* Relevance Judgment (Istiadi 2012)
+- Kelompok _query_ *A*: menguji sistem dalam mencari *lafal*
+- Kelompok _query_ *B*: menguji sistem dalam mencari *topik*
+
+* Pengukuran Kinerja
+Metode pengindeksan:
+- Vokal (*V*)
+- Non-Vokal (*N*)
+
+Metode pemeringkatan:
+- Jumlah (*J*)
+- Posisi (*P*)
+
+Skema: *VJ*, *VP*, *NJ*, *NP*
+
+Kinerja yang diukur: *waktu*pencarian* dan *kualitas*pencarian* (AVP)
+
+* Implementasi
+- Prosesor Intel Core i3-4005U 1.70 GHz
+- Memori 4GB
+- Sistem operasi [[https://www.ubuntu.com/][Ubuntu]] versi 16.04
+- Bahasa Pemrograman [[https://golang.org/][Go]] versi go1.11.1
+- lingkungan pengembangan (IDE) [[https://code.visualstudio.com/][Visual Studio Code]] versi 1.25.1
+
+* Hasil dan Pembahasan
+
+* Silabifikasi teks Alquran
+1. Praproses: menjalankan prosedur pengodean fonetis teks Alquran Istiadi (2012) *kecuali* prosedur [[#16][10]]
+2. Silabifikasi
+3. Penandaan _onset_ yang *ambigu*
+
+* Pseudo-code silabifikasi (Bartlett et al. (2009)
+    until huruf sekarang adalah huruf vokal
+        tandai huruf sekarang sebagai onset
+    end loop
+    until seluruh huruf sudah ditandai
+        tandai huruf sekarang sebagai nucleus
+        if tidak ada lagi huruf vokal didalam kata
+          tandai huruf konsonan yang tersisa sebagai coda
+        else
+            onset := semua huruf konsonan sebelum huruf vokal
+            coda := kosong
+            until onset legal
+                coda := coda ditambah huruf pertama dari onset
+                onset := onset dikurangi huruf pertama
+            end loop
+        end if
+    end loop
+    tambahkan batasan silabel sebelum onset
+
+* Pseudo-code silabifikasi pada penelitian ini
+    until seluruh huruf sudah ditandai
+        until huruf sekarang adalah huruf vokal
+            tandai huruf sekarang sebagai onset
+        end loop
+        until huruf sekarang adalah huruf konsonan
+            tandai huruf sekarang sebagai nucleus
+        end loop
+        tandai onset dan nucleus sebagai satu silabel
+    end loop
+
+* Contoh silabifikasi teks Alquran
+.image assets/silabifikasi_alquran.png _ 1000
+
+* Silabifikasi teks transliterasi
+1. Praproses: menjalankan prosedur pengodean fonetis teks Latin Istiadi (2012) *kecuali* prosedur [[#17][9]]
+2. Silabifikasi
+
+* Contoh silabifikasi teks transliterasi
+.image assets/silabifikasi_transliterasi.png _ 1000
+
+* Penyandingan Silabel
+1. *Penyandingan*silabel* antara teks Alquran dan teks transliterasi
+2. Penghilangan silabel yang memiliki _onset_ yang *ambigu*
+3. Pemisahan _onset_ dan _nucleus_
+
+* Contoh penyandingan silabel
+.image assets/penyandingan_silabel.png _ 1000
+
+* Waktu Komputasi
+*1.137*detik*
+
+Batas toleransi waktu tunggu pengguna untuk melakukan pencarian informasi pada aplikasi berbasis web adalah *2*detik* (Nah 2004)
+
+* Pengaruh Ambiguitas teks Transliterasi
+Jumlah ayat pada 3 peringkat pertama berdasarkan hasil pencarian menggunakan vokal dan pemeringkatan berdasarkan posisi:
+1. 5939
+2. 139
+3. 25
+
+*97.87%* dari total ayat berada pada posisi 1-3
+
+* Pengaruh Ambiguitas teks Transliterasi
+Jumlah ayat pada peringkat 4-38 sebanyak *78* ayat
+
+Miss *55* ayat
+
+* Pengujian sistem
+- 685 variasi penulisan _query_ *A*
+- 136 variasi penulisan _query_ *B*
+
+Beberapa contoh variasi penulisan _query_ *A1*:
+- khulul albab
+- ulul albab
+- ulul abab
+- ulul 'albaab
+- ulul al baab
+- ululalbab
+- qul albab
+- qulul albaaaab
+
+* Nilai AVP
+.image assets/avp.png _ 600
+
+* Perbandingan waktu komputasi
+.image assets/waktu_komputasi.png
+
+* Perbandingan kinerja sistem
+- A8: perbedaan pengodean fonetis untuk huruf *QH* pada kata QHODIR
+otomatis: *QH* -> *KH*
+manual: *QH* -> *H*
+
+- A10: perbedaan pengodean fonetis untuk huruf *P* pada kata GOPUR
+otomatis: *P* -> *P*
+manual: *P* -> *F*
+
+* Simpulan dan Saran
+
+* Simpulan
+- *Transliterasi*dapat*dipakai* untuk membantu melakukan *pengodean*fonetis* secara *otomatis* dengan algoritme *silabifikasi*
+- *Ambiguitas* pada transliterasi *tidak*berpengaruh* terhadap proses pembangkitan padanan aksara
+- Proses *automasi*berjalan*dengan*baik* karena *tidak*ada*perbedaan*yang*signifikan* antara pengodean fonetis secara otomatis dengan pengodean fonetis secara manual
+
+* Saran
+Saran untuk penelitian selanjutnya yaitu proses silabifikasi *dapat*mendukung*aksara*lain* selain aksara Latin, seperti aksara *Dewanagari* yang digunakan untuk menuliskan bahasa Hindi dan Sanskerta
+
+* Daftar Pustaka
+Adsett CR. 2008. Automatic syllabification in European languages. A comparison of data-driven Mmthods [tesis]. Halifax, Nova Scotia (CA): Dalhousie University.
+
+Al-Muhtaseb HA, Bellegdi SA. 2016. Towards a minimal phonetic set for Quran qecitation. International Journal on Islamic Applications in Computer Science And Technology [Internet]. [diunduh 2018 Jun 13]; 4(3):36-41. Tersedia pada: http://www.sign-ific-ance.co.uk/index.php/IJASAT/article/view/1473/1355.
+
+Bartlett S, Kondrak G, Cherry C. 2009. On the syllabification of phonemes. Di dalam: Ostendorf M, Collins M, Narayanan S, Oard DW, Vanderwende L, editor. Proceedings of Human Language Technologies: The 2009 Annual Conference of the North American Chapter of the ACL [Internet]; 2009 Jun; Boulder, Colorado, Amerika Serikat. Boulder (US): ACL. hlm 308-316; [diunduh 2018 Jun 13]. Tersedia pada: http://www.aclweb.org/anthology/N09-1035.
+
+Elshafei M, Al-Muhtaseb H, Alghamdi M. 2002. Techniques for high quality Arabic speech synthesis. Information Sciences. 140(3):255-267. doi:10.1016/S0020-0255(01)00175-X.
+
+* Daftar Pustaka
+Hammo B, Sleit A, El-Haj M. 2007. Effectiveness of query expansion in searching the Holy Quran. Di dalam: Proceedings of the Second International Conference on Arabic Language Processing. CITALA’07; 2007 Jun 18-19; Rabat, Maroko. Rabat (MA): IERA. hlm 1-10.
+
+[IC] IslamiCity. 2001. Phonetic Search. http://islamicity.com/ps [2018 Jan 11].
+
+Istiadi MA. 2012. Sistem pencarian ayat Al-Quran berbasis kemiripan fonetis [skripsi]. Bogor (ID): Institut Pertanian Bogor.
+
+[LAFZ] Lafzi. 2012. Pencarian Lafaz Quran. http://lafzi.apps.cs.ipb.ac.id/web [2018 Jan 11].
+
+Lansky J, Zemlicka M. 2006. Compression of small text files using syllables. Di dalam: Data Compression Conference. DDC’06; 2006; Washington, DC, Amerika Serikat. Washington, DC (US): IEEE. hlm 458.
+
+Manning CD, Raghavan P, Schutze H. 2009. Introduction to Information Retrieval. Cambridge (GB): Cambridge University Press.
+
+* Daftar Pustaka
+Nah FF. 2004. A study on tolerable waiting time. How long are Web users willing to wait?. Behaviour and Information Technology. 21(3):153-163. doi:10.1080/01449290410001669914.
+
+Soori H, Platos J, Snasel V, Abdulla H. 2011. Simple rules for syllabification of Arabic texts. Di dalam: Snasel V, Platos J, El-Qawasmeh E, editor. Digital Information Processing and Communications. ICDIPC; 2011 Jul 7-9; Ostrava, Cheska. Berlin (DE): Springer. hlm 97-105.
+
+[TANZ] Tanzil Contributors. 2011. Tanzil – Quran Navigator. http://tanzil.net [2018 Jan 11].
+
+[ZEKR] Zekr Contributors. 2010. Zekr – Quran Study Software for Linux. http://zekr.org [2018 Jan 11].
+
+* Demo
+
+* Go-Lafzi
+source code: [[https://github.com/billyzaelani/go-lafzi][github.com/billyzaelani/go-lafzi]]
