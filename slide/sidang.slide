@@ -17,9 +17,9 @@ https://github.com/billyzaelani
 
 * Alquran
 Hammo _et_al_. (2007):
-- 77.485 kata
-- 6.236 ayat
-- 114 surat
+- 77.485 *kata*
+- 6.236 *ayat*
+- 114 *surat*
 
 * Sistem pencarian berbasis kemiripan fonetis
 "Pencarian berbasis kemiripan fonetis memanfaatkan *pencocokan*fonetis* untuk membuat padanan aksara"
@@ -44,8 +44,11 @@ Hammo _et_al_. (2007):
 
 * Penerapan silabifikasi
 - Pemrosesan bahasa natural: _speech_recognition_ dan _speech_synthesis_ (Adsett 2008)
-- Al-Muhtaseb dan Bellegdi (2016) membangun sistem _Text-to-Speech_ untuk pembacaan Alquran
-- Soori _et_al_. (2011) serta Lansky dan Zemlicka (2006) mengembangkan algoritme kompresi dokumen berbasis silabel
+- Al-Muhtaseb dan Bellegdi (2016) menggunakan transkripsi fonetik dan *silabifikasi* untuk membangun sistem _Text-to-Speech_ untuk pembacaan Alquran
+- Soori _et_al_. (2011) serta Lansky dan Zemlicka (2006) mengembangkan algoritme kompresi dokumen berbasis *silabel*
+
+* Silabifikasi untuk membangkitkan kode fonetis
+Dikembangkan algoritme untuk memadankan padanan antara aksara Arab pada Alquran dan aksara Latin pada transliterasi menggunakan *silabifikasi* yang kemudian digunakan untuk melakukan *pengodean*fonetis*
 
 * Perumusah masalah
 - Bagaimana cara *membangkitkan*kode*fonetis* secara *otomatis* berdasarkan *transliterasi*?
@@ -60,7 +63,7 @@ Hammo _et_al_. (2007):
 - *Membandingkan*kinerja* antara *sistem* dengan kode fonetis yang dibandingkan dan sistem dengan kode fonetis secara manual
 
 * Ruang lingkup penelitian
-- Menggunakan sistem [[https://github.com/lafzi/lafzi-web][Lafzi]] secara lengkap yang hanya dimodifikasi pada bagian *pengodean*fonetis*
+- Menggunakan sistem [[https://github.com/lafzi/lafzi-web][Lafzi]] secara lengkap yang hanya *dimodifikasi* pada bagian *pengodean*fonetis*
 - Transliterasi yang digunakan hanya *transliterasi*bahasa*Indonesia*
 
 * Metode
@@ -107,13 +110,37 @@ Hammo _et_al_. (2007):
 - Format data transliterasi menyerupai format data Alquran yaitu berupa _file_ teks yang setiap barisnya berupa 1 ayat dalam Alquran
 
 * Struktur Silabel (Bartlett et al. 2009)
-- Onset (opsional)
-- Nucleus
-- Coda (opsional)
+- _Onset_ (opsional)
+- _Nucleus_
+- _Coda_ (opsional)
 
 .image assets/struktur_silabel.png _ 800
 
-* Silabifikasi
+* Prinsip dalam algoritme silabifikasi (Bartlet et al. 2009)
+- _Legality_Principle_
+- _Sonority_Principle_
+- _Maximal_Onset_Principle_
+
+* Pseudo-code silabifikasi (Bartlett et al. 2009)
+    until huruf sekarang adalah huruf vokal
+        tandai huruf sekarang sebagai onset
+    end loop
+    until seluruh huruf sudah ditandai
+        tandai huruf sekarang sebagai nucleus
+        if tidak ada lagi huruf vokal didalam kata
+          tandai huruf konsonan yang tersisa sebagai coda
+        else
+            onset := semua huruf konsonan sebelum huruf vokal
+            coda := kosong
+            until onset legal
+                coda := coda ditambah huruf pertama dari onset
+                onset := onset dikurangi huruf pertama
+            end loop
+        end if
+    end loop
+    tambahkan batasan silabel sebelum onset
+
+* Batasan silabifikasi
 - Spesifik untuk setiap bahasa (Soori 2011)
 - _onset_ dan _coda_ kompleks
 
@@ -126,7 +153,7 @@ Hammo _et_al_. (2007):
 - W : vokal panjang
 
 * Penyandingan silabel
-Silabel dari hasil silabifikasi pada teks Alquran dan teks transliterasi disandingkan untuk mendapat padanan aksara
+Silabel dari hasil silabifikasi pada teks Alquran dan teks transliterasi *disandingkan* untuk mendapat *padanan*aksara*
 
 * Pengaruh ambiguitas teks transliterasi
 .image assets/pengaruh_ambiguitas.png _ 1000
@@ -135,7 +162,7 @@ Silabel dari hasil silabifikasi pada teks Alquran dan teks transliterasi disandi
 - Kelompok _query_ *A*: menguji sistem dalam mencari *lafal*
 - Kelompok _query_ *B*: menguji sistem dalam mencari *topik*
 
-* Pengukuran Kinerja
+* Pengukuran Kinerja (Istiadi 2012)
 Metode pengindeksan:
 - Vokal (*V*)
 - Non-Vokal (*N*)
@@ -158,28 +185,9 @@ Kinerja yang diukur: *waktu*pencarian* dan *kualitas*pencarian* (AVP)
 * Hasil dan Pembahasan
 
 * Silabifikasi teks Alquran
-1. Praproses: menjalankan prosedur pengodean fonetis teks Alquran Istiadi (2012) *kecuali* prosedur [[#16][10]]
+1. Praproses: menjalankan prosedur pengodean fonetis teks Alquran Istiadi (2012) *kecuali* prosedur [[#17][10]]
 2. Silabifikasi
 3. Penandaan _onset_ yang *ambigu*
-
-* Pseudo-code silabifikasi (Bartlett et al. (2009)
-    until huruf sekarang adalah huruf vokal
-        tandai huruf sekarang sebagai onset
-    end loop
-    until seluruh huruf sudah ditandai
-        tandai huruf sekarang sebagai nucleus
-        if tidak ada lagi huruf vokal didalam kata
-          tandai huruf konsonan yang tersisa sebagai coda
-        else
-            onset := semua huruf konsonan sebelum huruf vokal
-            coda := kosong
-            until onset legal
-                coda := coda ditambah huruf pertama dari onset
-                onset := onset dikurangi huruf pertama
-            end loop
-        end if
-    end loop
-    tambahkan batasan silabel sebelum onset
 
 * Pseudo-code silabifikasi pada penelitian ini
     until seluruh huruf sudah ditandai
@@ -196,7 +204,7 @@ Kinerja yang diukur: *waktu*pencarian* dan *kualitas*pencarian* (AVP)
 .image assets/silabifikasi_alquran.png _ 1000
 
 * Silabifikasi teks transliterasi
-1. Praproses: menjalankan prosedur pengodean fonetis teks Latin Istiadi (2012) *kecuali* prosedur [[#17][9]]
+1. Praproses: menjalankan prosedur pengodean fonetis teks Latin Istiadi (2012) *kecuali* prosedur [[#18][9]]
 2. Silabifikasi
 
 * Contoh silabifikasi teks transliterasi
@@ -224,9 +232,9 @@ Jumlah ayat pada 3 peringkat pertama berdasarkan hasil pencarian menggunakan vok
 *97.87%* dari total ayat berada pada posisi 1-3
 
 * Pengaruh Ambiguitas teks Transliterasi
-Jumlah ayat pada peringkat 4-38 sebanyak *78* ayat
+Jumlah ayat pada peringkat 4-38 sebanyak *78* ayat (ayat pendek yang merupakan bagian dari ayat lain atau ayat yang berulang)
 
-Miss *55* ayat
+Miss *55* ayat (ayat pendek dan memiliki 2 huruf vokal berdampingan yang ambigu: _hamzah_, bacaan panjang, atau diftong)
 
 * Pengujian sistem
 - 685 variasi penulisan _query_ *A*
@@ -245,7 +253,7 @@ Beberapa contoh variasi penulisan _query_ *A1*:
 * Nilai AVP
 .image assets/avp.png _ 600
 
-* Perbandingan waktu komputasi
+* Perbandingan waktu komputasi (dalam milidetik)
 .image assets/waktu_komputasi.png
 
 * Perbandingan kinerja sistem

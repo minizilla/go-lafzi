@@ -16,11 +16,11 @@ import (
 func main() {
 	timeStart := time.Now()
 
-	quranFile, err := os.Open("data/quran/uthmani.txt")
+	quranFile, err := os.Open("../data/quran/uthmani.txt")
 	if err != nil {
 		log.Fatal(err)
 	}
-	transFile, err := os.Open("data/transliterasi/ID(ayatalquran.net).txt")
+	transFile, err := os.Open("../data/transliteration/ID(ayatalquran.net).txt")
 	if err != nil {
 		log.Fatal(err)
 	}
