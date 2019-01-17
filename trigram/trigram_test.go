@@ -9,12 +9,12 @@ import (
 func TestExtract(t *testing.T) {
 	tables := []struct {
 		s        []byte
-		expected trigram.Trigram
+		expected []string
 	}{
-		{[]byte("X"), trigram.Trigram{}},
-		{[]byte("XYX"), trigram.Trigram{"XYX"}},
-		{[]byte("XLFLMM"), trigram.Trigram{"XLF", "LFL", "FLM", "LMM"}},
-		{[]byte("ABCABCABC"), trigram.Trigram{"ABC", "BCA", "CAB"}},
+		{[]byte("X"), []string{}},
+		{[]byte("XYX"), []string{"XYX"}},
+		{[]byte("XLFLMM"), []string{"XLF", "LFL", "FLM", "LMM"}},
+		{[]byte("ABCABCABC"), []string{"ABC", "BCA", "CAB"}},
 	}
 
 	for _, table := range tables {
@@ -23,7 +23,7 @@ func TestExtract(t *testing.T) {
 			t.Errorf("expected: %d, actual: %d", len(table.expected), len(actual))
 		}
 		for i, token := range table.expected {
-			if token != actual[i] {
+			if token != actual[i].String() {
 				t.Errorf("query: %s error, expected: %s, actual: %s", table.s, token, actual[i])
 			}
 		}
@@ -33,50 +33,25 @@ func TestExtract(t *testing.T) {
 func TestTokenPosition(t *testing.T) {
 	s := []byte("ABCABCABC")
 	tables := []struct {
-		token    trigram.Token
+		token    string
 		expected []int
 	}{
 		{"ABC", []int{1, 4, 7}},
 		{"BCA", []int{2, 5}},
 		{"CAB", []int{3, 6}},
 	}
-	tr := trigram.TokenPositions(s)
+	tr := trigram.Extract(s)
 	for i, table := range tables {
-		if len(table.expected) != len(tr[i].Position) {
+		actual := tr[i].Frequency()
+		if len(table.expected) != actual {
 			t.Errorf("token: %s error, expected len: %d, actual len: %d", table.token, len(table.expected), len(tr))
 		}
+
 		for j, expectedPos := range table.expected {
-			actualPos := tr[i].Position[j]
+			actualPos := tr[i].Position()[j]
 			if expectedPos != actualPos {
 				t.Errorf("token: %s error, expected pos: %d, actual pos: %d", table.token, expectedPos, actualPos)
 			}
-		}
-	}
-}
-
-func TestPosJoinString(t *testing.T) {
-	sep := ","
-	tables := []struct {
-		s        []int
-		expected string
-	}{
-		{[]int{}, ""},
-		{[]int{1}, "1"},
-		{[]int{1, 2}, "1,2"},
-		{[]int{1, 2, 3}, "1,2,3"},
-	}
-
-	for _, table := range tables {
-		actual := make(trigram.Position, len(table.s))
-		for i := range actual {
-			actual[i] = table.s[i]
-		}
-		if len(table.s) != actual.Len() {
-			t.Errorf("err len, expected: %d, actual: %d", len(table.s), actual.Len())
-		}
-		str := actual.JoinString(sep)
-		if table.expected != str {
-			t.Errorf("expected: %s, actual: %s", table.expected, str)
 		}
 	}
 }
