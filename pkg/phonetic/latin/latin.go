@@ -8,7 +8,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	ar "github.com/billyzaelani/go-lafzi/phonetic/arabic"
+	ar "github.com/billyzaelani/go-lafzi/pkg/arabic"
 	"github.com/dlclark/regexp2"
 )
 

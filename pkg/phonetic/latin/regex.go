@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	ar "github.com/billyzaelani/go-lafzi/phonetic/arabic"
+	ar "github.com/billyzaelani/go-lafzi/pkg/arabic"
 )
 
 type regex struct {

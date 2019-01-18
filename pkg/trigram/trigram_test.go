@@ -3,7 +3,7 @@ package trigram_test
 import (
 	"testing"
 
-	"github.com/billyzaelani/go-lafzi/trigram"
+	"github.com/billyzaelani/go-lafzi/pkg/trigram"
 )
 
 func TestExtract(t *testing.T) {

@@ -5,7 +5,8 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	ar "github.com/billyzaelani/go-lafzi/phonetic/arabic"
+	ar "github.com/billyzaelani/go-lafzi/pkg/arabic"
+	"github.com/billyzaelani/go-lafzi/pkg/phonetic/arabic"
 )
 
 // syllable actually hav onset, nucleus, and coda.
@@ -105,12 +106,12 @@ func ArabicSyllabification(s []byte) []Arabic {
 		return []Arabic{}
 	}
 
-	s = ar.NormalizedUthmani(s)
-	s = ar.RemoveSpace(s)
+	s = arabic.NormalizedUthmani(s)
+	s = arabic.RemoveSpace(s)
 	// s = ar.RemoveShadda(s) // shadda usually written in double
 	// s = ar.JoinConsonant(s) // some write noon some don't
-	s = ar.FixBoundary(s)
-	s = ar.TanwinSub(s)
+	s = arabic.FixBoundary(s)
+	s = arabic.TanwinSub(s)
 
 	//
 	old := []byte(string([]rune{ar.Alef, ar.Lam}))
@@ -118,8 +119,8 @@ func ArabicSyllabification(s []byte) []Arabic {
 	s = bytes.Replace(s, old, new, -1)
 	//
 
-	s = ar.RemoveMadda(s)
-	s = ar.RemoveUnreadConsonant(s)
+	s = arabic.RemoveMadda(s)
+	s = arabic.RemoveUnreadConsonant(s)
 	// s = ar.IqlabSub(s)  // some write noon some meem
 	// s = ar.IdghamSub(s) // some write noon some don't
 

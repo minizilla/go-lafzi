@@ -2,9 +2,7 @@
 // in streaming data.
 package sequence
 
-import (
-	"sort"
-)
+import "sort"
 
 // LIS finds longest increasing subsequent (LIS) in s.
 func LIS(s []int) []int {

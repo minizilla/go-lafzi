@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/billyzaelani/go-lafzi/syllable"
+	"github.com/billyzaelani/go-lafzi/pkg/syllable"
 )
 
 var (

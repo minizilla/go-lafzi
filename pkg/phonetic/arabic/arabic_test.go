@@ -1,7 +1,10 @@
-package arabic
+package arabic_test
 
 import (
 	"testing"
+
+	ar "github.com/billyzaelani/go-lafzi/pkg/arabic"
+	"github.com/billyzaelani/go-lafzi/pkg/phonetic/arabic"
 )
 
 func TestNormalizedUthmani(t *testing.T) {
@@ -9,11 +12,11 @@ func TestNormalizedUthmani(t *testing.T) {
 		s        []byte
 		expected string
 	}{
-		{[]byte(string([]rune{MaddahA, AlefA, SHLigatureSad, SHLigatureQaf,
-			SHMeemInit, SHLamAlef, AlefWasla, SHJeem, SHThreeDots,
-			SHSeen, RubElHizb, SHURectZero, SWaw, SHMeemIsolated,
-			SLSeen, Sajdah, ECHStop, HamzaA, RHFCStop, SLMeem, Tatweel})),
-			string([]rune{Alef, Hamza})},
+		{[]byte(string([]rune{ar.MaddahA, ar.AlefA, ar.SHLigatureSad, ar.SHLigatureQaf,
+			ar.SHMeemInit, ar.SHLamAlef, ar.AlefWasla, ar.SHJeem, ar.SHThreeDots,
+			ar.SHSeen, ar.RubElHizb, ar.SHURectZero, ar.SWaw, ar.SHMeemIsolated,
+			ar.SLSeen, ar.Sajdah, ar.ECHStop, ar.HamzaA, ar.RHFCStop, ar.SLMeem, ar.Tatweel})),
+			string([]rune{ar.Alef, ar.Hamza})},
 		{[]byte("اقْتَرَبَ"), "إِقْتَرَبَ"},
 		{[]byte("اقْرَ"), "إِقْرَ"},
 		// Adz-Dzariyat(51) verse: 47
@@ -21,7 +24,7 @@ func TestNormalizedUthmani(t *testing.T) {
 	}
 
 	for _, table := range tables {
-		actual := string(normalizedUthmani(table.s)[:])
+		actual := string(arabic.NormalizedUthmani(table.s)[:])
 		if actual != table.expected {
 			t.Errorf("expected: %s, actual: %s", table.expected, actual)
 		}
@@ -42,8 +45,8 @@ func TestRemoveSpace(t *testing.T) {
 	}
 
 	for _, table := range tables {
-		table.s = normalizedUthmani(table.s)
-		actual := string(removeSpace(table.s)[:])
+		table.s = arabic.NormalizedUthmani(table.s)
+		actual := string(arabic.RemoveSpace(table.s)[:])
 		if actual != table.expected {
 			t.Errorf("expected: %s, actual: %s", table.expected, actual)
 		}
@@ -64,9 +67,9 @@ func TestRemoveShadda(t *testing.T) {
 	}
 
 	for _, table := range tables {
-		table.s = normalizedUthmani(table.s)
-		table.s = removeSpace(table.s)
-		actual := string(removeShadda(table.s)[:])
+		table.s = arabic.NormalizedUthmani(table.s)
+		table.s = arabic.RemoveSpace(table.s)
+		actual := string(arabic.RemoveShadda(table.s)[:])
 		if actual != table.expected {
 			t.Errorf("expected: %s, actual: %s", table.expected, actual)
 		}
@@ -85,10 +88,10 @@ func TestJoinConsonant(t *testing.T) {
 	}
 
 	for _, table := range tables {
-		table.s = normalizedUthmani(table.s)
-		table.s = removeSpace(table.s)
-		table.s = removeShadda(table.s)
-		actual := string(joinConsonant(table.s)[:])
+		table.s = arabic.NormalizedUthmani(table.s)
+		table.s = arabic.RemoveSpace(table.s)
+		table.s = arabic.RemoveShadda(table.s)
+		actual := string(arabic.JoinConsonant(table.s)[:])
 		if actual != table.expected {
 			t.Errorf("expected: %s, actual: %s", table.expected, actual)
 		}
@@ -111,11 +114,11 @@ func TestFixBoundary(t *testing.T) {
 	}
 
 	for _, table := range tables {
-		table.s = normalizedUthmani(table.s)
-		table.s = removeSpace(table.s)
-		table.s = removeShadda(table.s)
-		table.s = joinConsonant(table.s)
-		actual := string(fixBoundary(table.s)[:])
+		table.s = arabic.NormalizedUthmani(table.s)
+		table.s = arabic.RemoveSpace(table.s)
+		table.s = arabic.RemoveShadda(table.s)
+		table.s = arabic.JoinConsonant(table.s)
+		actual := string(arabic.FixBoundary(table.s)[:])
 		if actual != table.expected {
 			t.Errorf("expected: %s, actual: %s", table.expected, actual)
 		}
@@ -136,12 +139,12 @@ func TestTanwinSub(t *testing.T) {
 	}
 
 	for _, table := range tables {
-		table.s = normalizedUthmani(table.s)
-		table.s = removeSpace(table.s)
-		table.s = removeShadda(table.s)
-		table.s = joinConsonant(table.s)
-		table.s = fixBoundary(table.s)
-		actual := string(tanwinSub(table.s)[:])
+		table.s = arabic.NormalizedUthmani(table.s)
+		table.s = arabic.RemoveSpace(table.s)
+		table.s = arabic.RemoveShadda(table.s)
+		table.s = arabic.JoinConsonant(table.s)
+		table.s = arabic.FixBoundary(table.s)
+		actual := string(arabic.TanwinSub(table.s)[:])
 		if actual != table.expected {
 			t.Errorf("expected: %s, actual: %s", table.expected, actual)
 		}
@@ -164,13 +167,13 @@ func TestRemoveMadda(t *testing.T) {
 	}
 
 	for _, table := range tables {
-		table.s = normalizedUthmani(table.s)
-		table.s = removeSpace(table.s)
-		table.s = removeShadda(table.s)
-		table.s = joinConsonant(table.s)
-		table.s = fixBoundary(table.s)
-		table.s = tanwinSub(table.s)
-		actual := string(removeMadda(table.s)[:])
+		table.s = arabic.NormalizedUthmani(table.s)
+		table.s = arabic.RemoveSpace(table.s)
+		table.s = arabic.RemoveShadda(table.s)
+		table.s = arabic.JoinConsonant(table.s)
+		table.s = arabic.FixBoundary(table.s)
+		table.s = arabic.TanwinSub(table.s)
+		actual := string(arabic.RemoveMadda(table.s)[:])
 		if actual != table.expected {
 			t.Errorf("expected: %s, actual: %s", table.expected, actual)
 		}
@@ -191,14 +194,14 @@ func TestRemoveUnreadConsonant(t *testing.T) {
 	}
 
 	for _, table := range tables {
-		table.s = normalizedUthmani(table.s)
-		table.s = removeSpace(table.s)
-		table.s = removeShadda(table.s)
-		table.s = joinConsonant(table.s)
-		table.s = fixBoundary(table.s)
-		table.s = tanwinSub(table.s)
-		table.s = removeMadda(table.s)
-		actual := string(removeUnreadConsonant(table.s)[:])
+		table.s = arabic.NormalizedUthmani(table.s)
+		table.s = arabic.RemoveSpace(table.s)
+		table.s = arabic.RemoveShadda(table.s)
+		table.s = arabic.JoinConsonant(table.s)
+		table.s = arabic.FixBoundary(table.s)
+		table.s = arabic.TanwinSub(table.s)
+		table.s = arabic.RemoveMadda(table.s)
+		actual := string(arabic.RemoveUnreadConsonant(table.s)[:])
 		if actual != table.expected {
 			t.Errorf("expected: %s, actual: %s", table.expected, actual)
 		}
@@ -215,15 +218,15 @@ func TestIqlabSub(t *testing.T) {
 	}
 
 	for _, table := range tables {
-		table.s = normalizedUthmani(table.s)
-		table.s = removeSpace(table.s)
-		table.s = removeShadda(table.s)
-		table.s = joinConsonant(table.s)
-		table.s = fixBoundary(table.s)
-		table.s = tanwinSub(table.s)
-		table.s = removeMadda(table.s)
-		table.s = removeUnreadConsonant(table.s)
-		actual := string(iqlabSub(table.s)[:])
+		table.s = arabic.NormalizedUthmani(table.s)
+		table.s = arabic.RemoveSpace(table.s)
+		table.s = arabic.RemoveShadda(table.s)
+		table.s = arabic.JoinConsonant(table.s)
+		table.s = arabic.FixBoundary(table.s)
+		table.s = arabic.TanwinSub(table.s)
+		table.s = arabic.RemoveMadda(table.s)
+		table.s = arabic.RemoveUnreadConsonant(table.s)
+		actual := string(arabic.IqlabSub(table.s)[:])
 		if actual != table.expected {
 			t.Errorf("expected: %s, actual: %s", table.expected, actual)
 		}
@@ -260,16 +263,16 @@ func TestIdghamSub(t *testing.T) {
 	}
 
 	for _, table := range tables {
-		table.s = normalizedUthmani(table.s)
-		table.s = removeSpace(table.s)
-		table.s = removeShadda(table.s)
-		table.s = joinConsonant(table.s)
-		table.s = fixBoundary(table.s)
-		table.s = tanwinSub(table.s)
-		table.s = removeMadda(table.s)
-		table.s = removeUnreadConsonant(table.s)
-		table.s = iqlabSub(table.s)
-		actual := string(idghamSub(table.s)[:])
+		table.s = arabic.NormalizedUthmani(table.s)
+		table.s = arabic.RemoveSpace(table.s)
+		table.s = arabic.RemoveShadda(table.s)
+		table.s = arabic.JoinConsonant(table.s)
+		table.s = arabic.FixBoundary(table.s)
+		table.s = arabic.TanwinSub(table.s)
+		table.s = arabic.RemoveMadda(table.s)
+		table.s = arabic.RemoveUnreadConsonant(table.s)
+		table.s = arabic.IqlabSub(table.s)
+		actual := string(arabic.IdghamSub(table.s)[:])
 		if actual != table.expected {
 			t.Errorf("expected: %s, actual: %s", table.expected, actual)
 		}
@@ -290,17 +293,17 @@ func TestRemoveHarakat(t *testing.T) {
 	}
 
 	for _, table := range tables {
-		table.s = normalizedUthmani(table.s)
-		table.s = removeSpace(table.s)
-		table.s = removeShadda(table.s)
-		table.s = joinConsonant(table.s)
-		table.s = fixBoundary(table.s)
-		table.s = tanwinSub(table.s)
-		table.s = removeMadda(table.s)
-		table.s = removeUnreadConsonant(table.s)
-		table.s = iqlabSub(table.s)
-		table.s = idghamSub(table.s)
-		actual := string(removeHarakat(table.s)[:])
+		table.s = arabic.NormalizedUthmani(table.s)
+		table.s = arabic.RemoveSpace(table.s)
+		table.s = arabic.RemoveShadda(table.s)
+		table.s = arabic.JoinConsonant(table.s)
+		table.s = arabic.FixBoundary(table.s)
+		table.s = arabic.TanwinSub(table.s)
+		table.s = arabic.RemoveMadda(table.s)
+		table.s = arabic.RemoveUnreadConsonant(table.s)
+		table.s = arabic.IqlabSub(table.s)
+		table.s = arabic.IdghamSub(table.s)
+		actual := string(arabic.RemoveHarakat(table.s)[:])
 		if actual != table.expected {
 			t.Errorf("expected: %s, actual: %s", table.expected, actual)
 		}
@@ -323,18 +326,18 @@ func TestEncode(t *testing.T) {
 	}
 
 	for _, table := range tables {
-		table.s = normalizedUthmani(table.s)
-		table.s = removeSpace(table.s)
-		table.s = removeShadda(table.s)
-		table.s = joinConsonant(table.s)
-		table.s = fixBoundary(table.s)
-		table.s = tanwinSub(table.s)
-		table.s = removeMadda(table.s)
-		table.s = removeUnreadConsonant(table.s)
-		table.s = iqlabSub(table.s)
-		table.s = idghamSub(table.s)
-		table.s = removeHarakat(table.s)
-		actual := string(encode(table.s)[:])
+		table.s = arabic.NormalizedUthmani(table.s)
+		table.s = arabic.RemoveSpace(table.s)
+		table.s = arabic.RemoveShadda(table.s)
+		table.s = arabic.JoinConsonant(table.s)
+		table.s = arabic.FixBoundary(table.s)
+		table.s = arabic.TanwinSub(table.s)
+		table.s = arabic.RemoveMadda(table.s)
+		table.s = arabic.RemoveUnreadConsonant(table.s)
+		table.s = arabic.IqlabSub(table.s)
+		table.s = arabic.IdghamSub(table.s)
+		table.s = arabic.RemoveHarakat(table.s)
+		actual := string(arabic.Encode(table.s)[:])
 		if actual != table.expected {
 			t.Errorf("expected: %s, actual: %s", table.expected, actual)
 		}
@@ -359,18 +362,18 @@ func TestEncode(t *testing.T) {
 	}
 
 	for _, table := range tables {
-		table.s = normalizedUthmani(table.s)
-		table.s = removeSpace(table.s)
-		table.s = removeShadda(table.s)
-		table.s = joinConsonant(table.s)
-		table.s = fixBoundary(table.s)
-		table.s = tanwinSub(table.s)
-		table.s = removeMadda(table.s)
-		table.s = removeUnreadConsonant(table.s)
-		table.s = iqlabSub(table.s)
-		table.s = idghamSub(table.s)
-		table.s = removeHarakat(table.s)
-		actual := string(encode(table.s)[:])
+		table.s = arabic.NormalizedUthmani(table.s)
+		table.s = arabic.RemoveSpace(table.s)
+		table.s = arabic.RemoveShadda(table.s)
+		table.s = arabic.JoinConsonant(table.s)
+		table.s = arabic.FixBoundary(table.s)
+		table.s = arabic.TanwinSub(table.s)
+		table.s = arabic.RemoveMadda(table.s)
+		table.s = arabic.RemoveUnreadConsonant(table.s)
+		table.s = arabic.IqlabSub(table.s)
+		table.s = arabic.IdghamSub(table.s)
+		table.s = arabic.RemoveHarakat(table.s)
+		actual := string(arabic.Encode(table.s)[:])
 		if actual != table.expected {
 			t.Errorf("expected: %s, actual: %s", table.expected, actual)
 		}

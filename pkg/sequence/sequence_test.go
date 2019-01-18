@@ -3,7 +3,7 @@ package sequence_test
 import (
 	"testing"
 
-	"github.com/billyzaelani/go-lafzi/sequence"
+	"github.com/billyzaelani/go-lafzi/pkg/sequence"
 )
 
 func TestLIS(t *testing.T) {
