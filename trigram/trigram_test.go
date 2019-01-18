@@ -23,7 +23,7 @@ func TestExtract(t *testing.T) {
 			t.Errorf("expected: %d, actual: %d", len(table.expected), len(actual))
 		}
 		for i, token := range table.expected {
-			if token != actual[i].String() {
+			if token != actual[i].Token() {
 				t.Errorf("query: %s error, expected: %s, actual: %s", table.s, token, actual[i])
 			}
 		}

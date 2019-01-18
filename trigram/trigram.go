@@ -19,8 +19,8 @@ func NewToken(token string, pos ...int) Token {
 	return Token{token, pos}
 }
 
-// String ...
-func (t Token) String() string {
+// Token ...
+func (t Token) Token() string {
 	return t.token
 }
 
@@ -32,6 +32,10 @@ func (t Token) Position() []int {
 // Frequency return the number of token appear in a trigram.
 func (t Token) Frequency() int {
 	return len(t.position)
+}
+
+func (t Token) String() string {
+	return t.token
 }
 
 func (t *Token) addPosition(pos int) {
