@@ -25,17 +25,17 @@ Hammo _et_al_. (2007):
 "Pencarian berbasis kemiripan fonetis memanfaatkan *pencocokan*fonetis* untuk membuat padanan aksara"
 - Istiadi 2012
 
-.image assets/islamicity.png
+.image asset/islamicity.png
 .caption [[https://www.islamicity.org/ps/][islamicity.org]]
 
-.image assets/lafzi.png
+.image asset/lafzi.png
 .caption [[http://lafzi.apps.cs.ipb.ac.id/web/][Istiadi (2012)]]
 
 * Padanan aksara yang berbeda
-.image assets/padanan.png _ 900
+.image asset/padanan.png _ 900
 
 * Transliterasi
-.image assets/transliterasi.png
+.image asset/transliterasi.png
 .caption [[http://www.qurandatabase.org][qurandatabase.org]]
 
 * Silabifikasi
@@ -69,11 +69,11 @@ Dikembangkan algoritme untuk memadankan padanan antara aksara Arab pada Alquran 
 * Metode
 
 * Gambaran umum sistem Lafzi
-.image assets/flowchart_lafzi.png _ 650
+.image asset/flowchart_lafzi.png _ 650
 .caption Istiadi (2012)
 
 * Gambaran umum sistem Lafzi pada penelitian ini
-.image assets/flowchart_lafzi_auto.png _ 500
+.image asset/flowchart_lafzi_auto.png _ 500
 
 * Prosedur pengodean fonetis teks Alquran (Istiadi 2012)
 1. Penghilangan spasi
@@ -114,7 +114,7 @@ Dikembangkan algoritme untuk memadankan padanan antara aksara Arab pada Alquran 
 - _Nucleus_
 - _Coda_ (opsional)
 
-.image assets/struktur_silabel.png _ 800
+.image asset/struktur_silabel.png _ 800
 
 * Prinsip dalam algoritme silabifikasi (Bartlet et al. 2009)
 - _Legality_Principle_
@@ -144,10 +144,10 @@ Dikembangkan algoritme untuk memadankan padanan antara aksara Arab pada Alquran 
 - Spesifik untuk setiap bahasa (Soori 2011)
 - _onset_ dan _coda_ kompleks
 
-.image assets/silabel_kompleks.png _ 1000
+.image asset/silabel_kompleks.png _ 1000
 
 * Pola silabel pada bahasa Arab (Elshafei et al. 2002)
-.image assets/pola_silabel.png _ 1000
+.image asset/pola_silabel.png _ 1000
 - C : huruf konsonan
 - V : vokal pendek
 - W : vokal panjang
@@ -156,7 +156,7 @@ Dikembangkan algoritme untuk memadankan padanan antara aksara Arab pada Alquran 
 Silabel dari hasil silabifikasi pada teks Alquran dan teks transliterasi *disandingkan* untuk mendapat *padanan*aksara*
 
 * Pengaruh ambiguitas teks transliterasi
-.image assets/pengaruh_ambiguitas.png _ 1000
+.image asset/pengaruh_ambiguitas.png _ 1000
 
 * Relevance Judgment (Istiadi 2012)
 - Kelompok _query_ *A*: menguji sistem dalam mencari *lafal*
@@ -201,14 +201,14 @@ Kinerja yang diukur: *waktu*pencarian* dan *kualitas*pencarian* (AVP)
     end loop
 
 * Contoh silabifikasi teks Alquran
-.image assets/silabifikasi_alquran.png _ 1000
+.image asset/silabifikasi_alquran.png _ 1000
 
 * Silabifikasi teks transliterasi
 1. Praproses: menjalankan prosedur pengodean fonetis teks Latin Istiadi (2012) *kecuali* prosedur [[#18][9]]
 2. Silabifikasi
 
 * Contoh silabifikasi teks transliterasi
-.image assets/silabifikasi_transliterasi.png _ 1000
+.image asset/silabifikasi_transliterasi.png _ 1000
 
 * Penyandingan Silabel
 1. *Penyandingan*silabel* antara teks Alquran dan teks transliterasi
@@ -216,7 +216,7 @@ Kinerja yang diukur: *waktu*pencarian* dan *kualitas*pencarian* (AVP)
 3. Pemisahan _onset_ dan _nucleus_
 
 * Contoh penyandingan silabel
-.image assets/penyandingan_silabel.png _ 1000
+.image asset/penyandingan_silabel.png _ 1000
 
 * Waktu Komputasi
 *1.137*detik*
@@ -251,10 +251,10 @@ Beberapa contoh variasi penulisan _query_ *A1*:
 - qulul albaaaab
 
 * Nilai AVP
-.image assets/avp.png _ 600
+.image asset/avp.png _ 600
 
 * Perbandingan waktu komputasi (dalam milidetik)
-.image assets/waktu_komputasi.png
+.image asset/waktu_komputasi.png
 
 * Perbandingan kinerja sistem
 - A8: perbedaan pengodean fonetis untuk huruf *QH* pada kata QHODIR
