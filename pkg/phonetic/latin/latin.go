@@ -1,12 +1,9 @@
 package latin
 
 import (
-	"bufio"
 	"bytes"
-	"io"
 	"regexp"
 	"strings"
-	"unicode/utf8"
 
 	ar "github.com/billyzaelani/go-lafzi/pkg/arabic"
 	"github.com/dlclark/regexp2"
@@ -16,8 +13,15 @@ import (
 // phonetic. Encoding with vowel might resulting unexpected behavior
 // (future work).
 type Encoder struct {
-	vowel   bool
-	letters map[rune]string
+	vowel bool
+	mapLetters
+}
+
+// NewEncoder ...
+func NewEncoder(mapLetters map[rune]string) *Encoder {
+	return &Encoder{
+		mapLetters: mapLetters,
+	}
 }
 
 // SetVowel ...
@@ -25,21 +29,9 @@ func (enc *Encoder) SetVowel(vowel bool) {
 	enc.vowel = vowel
 }
 
-// Parse ...
-func (enc *Encoder) Parse(lettersMapping io.Reader) {
-	if enc.letters == nil {
-		enc.letters = make(map[rune]string)
-	}
-	sc := bufio.NewScanner(lettersMapping)
-	for sc.Scan() {
-		// split delim "|"
-		// [0] arabic letters
-		// [1] latin letters
-		data := bytes.Split(sc.Bytes(), []byte("|"))
-		r, _ := utf8.DecodeRune(data[0])
-		l := string(data[1])
-		enc.letters[r] = l
-	}
+// SetLettersMapping ...
+func (enc *Encoder) SetLettersMapping(mapLetters map[rune]string) {
+	enc.mapLetters = mapLetters
 }
 
 // Encode returns encoded of src using encoding enc.
@@ -98,7 +90,7 @@ func (enc Encoder) joinConsonant(b []byte) []byte {
 	str, _ = regexp2.MustCompile("(?<single>B|C|D|F|G|H|J|K|L|M|N|P|Q|R|S|T|V|W|X|Y|Z)\\s?\\1+", 0).
 		Replace(str, "${single}", -1, -1)
 	// double consonant
-	reg := regDoubleC(enc.letters)
+	reg := regDoubleC(enc.mapLetters)
 	str, _ = regexp2.MustCompile(reg.pattern, 0).
 		Replace(str, reg.replace, -1, -1)
 
@@ -127,7 +119,7 @@ func diphthongSub(b []byte) []byte {
 
 func (enc Encoder) joinAleefLam(b []byte) []byte {
 	str := string(b)
-	reg := regJoinAleefLam(enc.letters)
+	reg := regJoinAleefLam(enc.mapLetters)
 	str, _ = regexp2.MustCompile(reg.pattern, 0).
 		Replace(str, reg.replace, -1, -1)
 
@@ -155,7 +147,7 @@ func markHamzah(b []byte) []byte {
 // any algorithm that use vowel may misbehave for auto generated phonetic.
 func (enc Encoder) ikhfaSub(b []byte) []byte {
 	// [vowel][NG][ikhfa] => [vowel][N][ikhfa]
-	reg := regIkhfa(enc.letters)
+	reg := regIkhfa(enc.mapLetters)
 	return regexp.MustCompile(reg.pattern).
 		ReplaceAll(b, []byte(reg.replace))
 }
@@ -163,7 +155,7 @@ func (enc Encoder) ikhfaSub(b []byte) []byte {
 // // TODO: need automatic detection through transliteration.
 func (enc Encoder) iqlabSub(b []byte) []byte {
 	// NB => MB
-	reg := regIqlab(enc.letters)
+	reg := regIqlab(enc.mapLetters)
 	return regexp.MustCompile(reg.pattern).
 		ReplaceAll(b, []byte(reg.replace))
 }
@@ -179,7 +171,7 @@ func (enc Encoder) idghamSub(b []byte) []byte {
 	b = bytes.Replace(b, []byte("NUNWALQALAM"), []byte("NUN_WALQALAM"), -1)
 
 	// N,M,L,R,Y,W
-	reg := regIdgham(enc.letters)
+	reg := regIdgham(enc.mapLetters)
 	b = regexp.MustCompile(reg.pattern).
 		ReplaceAll(b, []byte(reg.replace))
 
@@ -193,73 +185,71 @@ func (enc Encoder) idghamSub(b []byte) []byte {
 	return b
 }
 
-func createPattern(letters map[rune]string, targets ...rune) string {
+type mapLetters map[rune]string
+
+func (m mapLetters) replaceAll(src []byte, repl string, targets ...rune) []byte {
 	pattern := make([]string, 0, len(targets))
 	for _, s := range targets {
-		pattern = append(pattern, letters[s])
+		letter := m[s]
+		if letter != repl {
+			pattern = append(pattern, letter)
+		}
 	}
-	return strings.Join(pattern, "|")
+	if len(pattern) == 0 {
+		return src
+	}
+
+	return regexp.MustCompile(strings.Join(pattern, "|")).
+		ReplaceAll(src, []byte(repl))
 }
 
 func (enc Encoder) encode(b []byte) []byte {
-	b = regexp.MustCompile(
-		createPattern(enc.letters,
-			ar.Thal, ar.Zah, ar.Zain, ar.Jeem,
-		)).ReplaceAll(b, []byte("Z"))
+	b = enc.replaceAll(b, "Z",
+		ar.Thal, ar.Zah, ar.Zain, ar.Jeem)
 
-	b = regexp.MustCompile(
-		createPattern(enc.letters,
-			ar.Heh, ar.Khah, ar.Hah,
-		)).ReplaceAll(b, []byte("H"))
+	b = enc.replaceAll(b, "H",
+		ar.Heh, ar.Khah, ar.Hah)
 
 	b = regexp.MustCompile("'|`").
 		ReplaceAll(b, []byte("X"))
 
-	b = regexp.MustCompile(
-		createPattern(enc.letters,
-			ar.Theh, ar.Sheen, ar.Seen, ar.Sad,
-		)).ReplaceAll(b, []byte("S"))
+	b = enc.replaceAll(b, "S",
+		ar.Theh, ar.Sheen, ar.Sad, ar.Seen)
 
-	b = regexp.MustCompile(
-		createPattern(enc.letters,
-			ar.Dad, ar.Dal,
-		)).ReplaceAll(b, []byte("D"))
+	b = enc.replaceAll(b, "D",
+		ar.Dad, ar.Dal)
 
-	b = regexp.MustCompile(
-		createPattern(enc.letters,
-			ar.Teh, ar.Tah,
-		)).ReplaceAll(b, []byte("T"))
+	b = enc.replaceAll(b, "T",
+		ar.Teh, ar.Tah)
 
-	b = regexp.MustCompile(
-		createPattern(enc.letters,
-			ar.Qaf, ar.Kaf,
-		)).ReplaceAll(b, []byte("K"))
+	b = enc.replaceAll(b, "K",
+		ar.Qaf, ar.Kaf)
 
-	b = regexp.MustCompile(enc.letters[ar.Ghain]).
+	b = regexp.MustCompile(enc.mapLetters[ar.Ghain]).
 		ReplaceAll(b, []byte("G"))
 
-	b = regexp.MustCompile(enc.letters[ar.Feh]).
+	b = regexp.MustCompile(enc.mapLetters[ar.Feh]).
 		ReplaceAll(b, []byte("F"))
 
-	b = regexp.MustCompile(enc.letters[ar.Meem]).
+	b = regexp.MustCompile(enc.mapLetters[ar.Meem]).
 		ReplaceAll(b, []byte("M"))
 
-	b = regexp.MustCompile(enc.letters[ar.Noon]).
+	b = regexp.MustCompile(enc.mapLetters[ar.Noon]).
 		ReplaceAll(b, []byte("N"))
 
-	b = regexp.MustCompile(enc.letters[ar.Lam]).
+	b = regexp.MustCompile(enc.mapLetters[ar.Lam]).
 		ReplaceAll(b, []byte("L"))
 
-	b = regexp.MustCompile(enc.letters[ar.Beh]).
+	b = regexp.MustCompile(enc.mapLetters[ar.Beh]).
 		ReplaceAll(b, []byte("B"))
 
-	b = regexp.MustCompile(enc.letters[ar.Yeh]).
+	b = regexp.MustCompile(enc.mapLetters[ar.Yeh]).
 		ReplaceAll(b, []byte("Y"))
 
-	b = regexp.MustCompile(enc.letters[ar.Waw]).
+	b = regexp.MustCompile(enc.mapLetters[ar.Waw]).
 		ReplaceAll(b, []byte("W"))
 
-	b = regexp.MustCompile(enc.letters[ar.Reh]).
+	b = regexp.MustCompile(enc.mapLetters[ar.Reh]).
 		ReplaceAll(b, []byte("R"))
 
 	return b
