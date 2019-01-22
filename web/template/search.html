@@ -1,11 +1,11 @@
 {{define "head"}}
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <title>Lafzi - Hasil Pencarian</title>
-    <link rel="stylesheet" type="text/css" href="/assets/hilight.css" />
-    <link rel="shortcut icon" href="/assets/img/favicon.ico" type="image/x-icon" />
-    <link href="/assets/main.css" type="text/css" rel="stylesheet" />
-    <script type="text/javascript" src="/assets/jquery.1.7.js"></script>
-    <script type="text/javascript" src="/assets/hilight.js"></script>
+    <link rel="stylesheet" type="text/css" href="/asset/hilight.css" />
+    <link rel="shortcut icon" href="/asset/img/favicon.ico" type="image/x-icon" />
+    <link href="/asset/main.css" type="text/css" rel="stylesheet" />
+    <script type="text/javascript" src="/asset/jquery.1.7.js"></script>
+    <script type="text/javascript" src="/asset/hilight.js"></script>
 {{end}}
 {{define "badge"}}
 <div id="mobile_badge" style="position: fixed; top: 10px; right: 10px;">
@@ -30,7 +30,7 @@
 {{define "main"}}
 <div id="header">
     <a href="./">
-        <img src="/assets/img/logo-s.png" alt="Lafzi" id="logo-small" width="124" height="54" />
+        <img src="/asset/img/logo-s.png" alt="Lafzi" id="logo-small" width="124" height="54" />
     </a>
 
     <form action="" method="get" id="srp-search-form">
@@ -108,22 +108,20 @@
     {{end}}
 </div>
 {{end}}
-{{$quran := .Quran}}
-{{$translation := .Translation}}
 {{$maxScore := .Result.TrigramCount}}
 <div id="srb-container">
-    {{range $i, $val := .Result.Docs}}
+    {{range $i, $doc := .Result.Docs}}
         {{if isEven $i}}
     <div class="search-result-block">
         {{else}}
     <div class="search-result-block alt">
         {{end}}
-        {{$quranMeta := split $quran $translation $val.ID}}
+        {{$info := $doc.Ayat.Info}}
         <div class='sura-name'>
             <div class='num'>{{inc $i}}</div>
-            <span id="aya_name_{{$i}}">Surat {{$quranMeta.NamaSurat}} ({{$quranMeta.NoSurat}}) ayat {{$quranMeta.NoAyat}}</span>
+            <span id="aya_name_{{$i}}">Surat {{$info.ChapterName}} ({{$info.ChapterNo}}) ayat {{$info.VerseNo}}</span>
         </div>
-        {{$relevance := relevance $val.Score $maxScore}}
+        {{$relevance := relevance $doc.Score $maxScore}}
         <div class="rel-bar" title="Kecocokan {{$relevance}}%">
             <div class="relevance">{{$relevance}}%</div>
             <div class="relevance-bar">
@@ -132,14 +130,14 @@
         </div>
         <div class="aya_container">
             <div class="aya_text" id="aya_res_{{$i}}">
-                {{$quranMeta.Teks}}
+                {{$doc.Arabic}}
             </div>
             <div class="aya_trans" id="aya_trans_{{$i}}">
-                {{$quranMeta.Translation}}
+                {{$doc.Translation}}
             </div>
             <div class="aya-tools">
                 <a class='sura-link graybtn' title='Buka ayat ini di Al-Quran online'
-                    href='http://quran.ksu.edu.sa/index.php?l=id#aya={{$quranMeta.NoSurat}}_{{$quranMeta.NoAyat}}&m=hafs&qaree=husary&trans=id_indonesian'
+                    href='http://quran.ksu.edu.sa/index.php?l=id#aya={{$info.ChapterNo}}_{{$info.VerseNo}}&m=hafs&qaree=husary&trans=id_indonesian'
                     target='_blank'><span class='icon'></span> Buka di Al-Quran</a>
                 <a class='sura-link graybtn' title='Salin' href='#' onclick='showCopyDialog($i); return false;' style='margin-right: 5px;'>Salin Teks</a>
             </div>
