@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/billyzaelani/go-lafzi/trigram"
+	"github.com/billyzaelani/go-lafzi/pkg/trigram"
 )
 
 var vowel = flag.Bool("v", true, "if true generate index with vowel otherwise generate index without vowel, default true")
@@ -52,7 +52,7 @@ func main() {
 	}()
 
 	limit, i := 8000, 1
-	index := make(map[trigram.Token][]occurence)
+	index := make(map[string][]occurence)
 	keys := make([]string, 0)
 
 	sc := bufio.NewScanner(docFile)
@@ -63,10 +63,10 @@ func main() {
 		// [1] = phonetic
 		data := strings.Split(sc.Text(), "|")
 		docID := data[0]
-		tgram := trigram.TokenPositions([]byte(data[1]))
+		tgram := trigram.Extract([]byte(data[1]))
 		for _, tokenposition := range tgram {
-			token := tokenposition.Token
-			pos := tokenposition.Position
+			token := tokenposition.Token()
+			pos := tokenposition.Position()
 			if _, ok := index[token]; !ok {
 				index[token] = append([]occurence{}, occurence{docID, pos})
 			} else {
@@ -92,11 +92,11 @@ func main() {
 	var buf bytes.Buffer
 	for _, k := range keys {
 		fmt.Fprintf(termlistWriter, "%s|%d\n", k, offset)
-		for i, occur := range index[trigram.Token(k)] {
+		for i, occur := range index[k] {
 			if i != 0 {
 				fmt.Fprintf(&buf, ";")
 			}
-			fmt.Fprintf(&buf, "%s:%s", occur.id, occur.pos.JoinString(","))
+			fmt.Fprintf(&buf, "%s:%s", occur.id, occur.JoinString(","))
 		}
 		fmt.Fprint(&buf, "\n")
 		offset += buf.Len()
@@ -117,5 +117,17 @@ func main() {
 
 type occurence struct {
 	id  string
-	pos trigram.Position
+	pos []int
+}
+
+// JoinString ...
+func (o occurence) JoinString(sep string) string {
+	var buf bytes.Buffer
+	for i := 0; i < len(o.pos); i++ {
+		if i != 0 {
+			fmt.Fprintf(&buf, "%s", sep)
+		}
+		fmt.Fprintf(&buf, "%d", o.pos[i])
+	}
+	return buf.String()
 }

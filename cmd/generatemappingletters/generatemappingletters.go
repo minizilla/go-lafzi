@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/billyzaelani/go-lafzi/alphabet"
-	"github.com/billyzaelani/go-lafzi/syllable"
+	"github.com/billyzaelani/go-lafzi/pkg/alphabet"
+	"github.com/billyzaelani/go-lafzi/pkg/syllable"
 )
 
 var in = flag.String("in", "", "transliteration input file")

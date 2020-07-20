@@ -9,7 +9,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/billyzaelani/go-lafzi/phonetic/arabic"
+	"github.com/billyzaelani/go-lafzi/pkg/phonetic/arabic"
 )
 
 var vowel = flag.Bool("v", true, "if true generate corpus with vowel otherwise generate corpus without vowel, default true")
@@ -55,9 +55,7 @@ func main() {
 		encoder.SetLettersMode(arabic.LettersUthmani)
 		encoder.SetHarakat(*vowel)
 		phonetic := encoder.Encode(data[3])
-		if err := encoder.Encode(data[3]); err != nil {
-			log.Fatal(err)
-		}
+		encoder.Encode(data[3])
 
 		fmt.Printf("%d. Processing surat {%s} ayat {%s}\n", id, data[0], data[2])
 		fmt.Fprintf(fWriter, "%d|%s\n", id, string(phonetic[:]))
